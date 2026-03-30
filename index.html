@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Banana Group Monthly Report</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -465,7 +464,6 @@ input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
   margin-bottom: 16px;
 }
 .chart-card h3 { font-size: 16px; margin-bottom: 16px; }
-.chart-card canvas { max-height: 300px; }
 
 /* Member list */
 .member-list { display: flex; flex-direction: column; gap: 12px; }
@@ -639,7 +637,6 @@ input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
 <div class="nav-tabs">
   <button class="nav-tab active" onclick="showPage('input')">Report</button>
   <button class="nav-tab" onclick="showPage('dashboard')">Dashboard</button>
-  <button class="nav-tab" onclick="showPage('feedback')">Feedback</button>
 </div>
 
 <!-- ========== INPUT PAGE ========== -->
@@ -694,34 +691,17 @@ input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
   <div class="dashboard-header">
     <div class="banana-character">🍌</div>
     <h1>Dashboard</h1>
-    <p style="color:var(--text-muted)">数値の推移を確認</p>
+    <p style="color:var(--text-muted)">今月の提出状況をチェック</p>
   </div>
   <div class="filter-row">
-    <select id="dash-member-filter" onchange="renderDashboard()">
-      <option value="all">全メンバー</option>
+    <select id="dash-month-filter" onchange="renderDashboard()">
+      <option value="">今月</option>
     </select>
-    <button class="export-btn" onclick="exportCSV()">CSV出力</button>
   </div>
   <div id="dashboard-content"></div>
 </div>
 </div>
 
-<!-- ========== FEEDBACK PAGE ========== -->
-<div id="page-feedback" class="page">
-<div class="dashboard-container">
-  <div class="dashboard-header">
-    <div class="banana-character">🍌</div>
-    <h1>Feedback</h1>
-    <p style="color:var(--text-muted)">メンバーの月報を確認・フィードバック</p>
-  </div>
-  <div class="filter-row">
-    <select id="fb-month-filter" onchange="renderFeedbackList()">
-      <option value="all">すべての月</option>
-    </select>
-  </div>
-  <div id="feedback-content"></div>
-</div>
-</div>
 
 <script>
 // =============================================
@@ -1090,184 +1070,57 @@ function showPage(page) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById(`page-${page}`).classList.add('active');
   document.querySelectorAll('.nav-tab').forEach((t, i) => {
-    t.classList.toggle('active', ['input', 'dashboard', 'feedback'][i] === page);
+    t.classList.toggle('active', ['input', 'dashboard'][i] === page);
   });
   if (page === 'dashboard') renderDashboard();
-  if (page === 'feedback') renderFeedbackList();
 }
 
 // ========== DASHBOARD ==========
 function renderDashboard() {
   const reports = loadReports();
   const container = document.getElementById('dashboard-content');
-  const filterEl = document.getElementById('dash-member-filter');
-  const members = [...new Set(reports.map(r => r.name))];
-  const currentFilter = filterEl.value;
-  filterEl.innerHTML = '<option value="all">全メンバー</option>' +
-    members.map(m => `<option value="${m}" ${m === currentFilter ? 'selected' : ''}>${m}</option>`).join('');
-  const filtered = currentFilter === 'all' ? reports : reports.filter(r => r.name === currentFilter);
+  const filterEl = document.getElementById('dash-month-filter');
 
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="stat-card" style="text-align:center;padding:40px"><p style="color:var(--text-muted)">まだレポートがありません</p></div>';
-    return;
-  }
-  filtered.sort((a, b) => (a.month || '').localeCompare(b.month || ''));
-  const latestSales = filtered.filter(r => r.data.sales_amount).map(r => Number(r.data.sales_amount) || 0);
-  const totalSales = latestSales.reduce((s, v) => s + v, 0);
-  const latestFollowers = filtered.map(r => Number(r.data.insta_followers_end) || 0).filter(v => v > 0);
-  const maxFollowers = latestFollowers.length ? Math.max(...latestFollowers) : 0;
-
-  let html = `<div class="dashboard-grid">
-    <div class="stat-card"><h3>Total Reports</h3><div class="stat-value">${filtered.length}</div></div>
-    <div class="stat-card"><h3>累計売上</h3><div class="stat-value">¥${totalSales.toLocaleString()}</div></div>
-    <div class="stat-card"><h3>最新フォロワー数</h3><div class="stat-value">${maxFollowers.toLocaleString()}</div></div>
-  </div>`;
-  html += `<div class="chart-card"><h3>📸 Instagram フォロワー推移</h3><canvas id="chart-followers"></canvas></div>`;
-  html += `<div class="chart-card"><h3>💰 売上推移</h3><canvas id="chart-sales"></canvas></div>`;
-  html += `<div class="chart-card"><h3>📝 投稿数推移</h3><canvas id="chart-posts"></canvas></div>`;
-  container.innerHTML = html;
-
-  const labels = filtered.map(r => {
-    const name = currentFilter === 'all' ? `${r.name} ` : '';
-    return name + (r.month || '?');
-  });
-  new Chart(document.getElementById('chart-followers'), {
-    type: 'line',
-    data: { labels, datasets: [{
-      label: 'フォロワー数',
-      data: filtered.map(r => Number(r.data.insta_followers_end) || 0),
-      borderColor: '#4CAF50', backgroundColor: 'rgba(245, 197, 24, 0.1)',
-      fill: true, tension: 0.4, pointRadius: 6, pointBackgroundColor: '#FFD600',
-    }]},
-    options: chartOptions('人')
-  });
-  new Chart(document.getElementById('chart-sales'), {
-    type: 'bar',
-    data: { labels, datasets: [{
-      label: '売上',
-      data: filtered.map(r => Number(r.data.sales_amount) || 0),
-      backgroundColor: 'rgba(255, 214, 0, 0.6)', borderColor: '#FFD600', borderWidth: 2, borderRadius: 8,
-    }]},
-    options: chartOptions('円')
-  });
-  new Chart(document.getElementById('chart-posts'), {
-    type: 'bar',
-    data: { labels, datasets: [
-      { label: 'フィード', data: filtered.map(r => Number(r.data.insta_feed) || 0),
-        backgroundColor: 'rgba(76, 175, 80, 0.6)', borderRadius: 6 },
-      { label: 'リール', data: filtered.map(r => Number(r.data.insta_reel) || 0),
-        backgroundColor: 'rgba(139, 195, 74, 0.6)', borderRadius: 6 },
-    ]},
-    options: chartOptions('件')
-  });
-}
-
-function chartOptions(unit) {
-  return {
-    responsive: true, maintainAspectRatio: true,
-    plugins: { legend: { labels: { color: '#8A7D60', font: { size: 12 } } } },
-    scales: {
-      x: { ticks: { color: '#8A7D60', font: { size: 11 } }, grid: { color: 'rgba(245,197,24,0.05)' } },
-      y: { ticks: { color: '#8A7D60', callback: v => unit === '円' ? '¥' + v.toLocaleString() : v + unit },
-        grid: { color: 'rgba(245,197,24,0.08)' } }
-    }
-  };
-}
-
-// ========== FEEDBACK ==========
-function renderFeedbackList() {
-  const reports = loadReports();
-  const container = document.getElementById('feedback-content');
-  const filterEl = document.getElementById('fb-month-filter');
+  // 月の選択肢を構築
   const months = [...new Set(reports.map(r => r.month).filter(Boolean))].sort().reverse();
-  const currentFilter = filterEl.value;
-  filterEl.innerHTML = '<option value="all">すべての月</option>' +
-    months.map(m => `<option value="${m}" ${m === currentFilter ? 'selected' : ''}>${m}</option>`).join('');
-  const filtered = currentFilter === 'all' ? reports : reports.filter(r => r.month === currentFilter);
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const selectedMonth = filterEl.value || currentMonth;
+  filterEl.innerHTML = `<option value="${currentMonth}">今月 (${currentMonth})</option>` +
+    months.filter(m => m !== currentMonth).map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`).join('');
 
-  if (filtered.length === 0) {
-    container.innerHTML = '<div class="stat-card" style="text-align:center;padding:40px"><p style="color:var(--text-muted)">まだレポートがありません</p></div>';
-    return;
-  }
-  filtered.sort((a, b) => (b.submittedAt || '').localeCompare(a.submittedAt || ''));
-  container.innerHTML = '<div class="member-list">' + filtered.map(r => {
-    const date = r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('ja-JP') : '';
-    const preview = r.data.fb_q1 ? r.data.fb_q1.substring(0, 80) + (r.data.fb_q1.length > 80 ? '...' : '') : '';
-    const hasFeedback = r.feedback ? ' ✅' : '';
-    return `<div class="member-card" onclick="showReportDetail('${r.id}')">
-      <div class="member-card-header">
-        <span class="member-name">${r.name}${hasFeedback}</span>
-        <span class="member-date">${r.month} | ${date}</span>
+  // 選択月のレポートを抽出
+  const monthReports = reports.filter(r => r.month === selectedMonth);
+  const submittedNames = [...new Set(monthReports.map(r => r.name).filter(Boolean))];
+  const submittedCount = submittedNames.length;
+
+  // メインカード: 提出人数
+  let html = `<div class="stat-card" style="text-align:center;padding:40px 24px;">
+    <div style="font-size:64px;margin-bottom:12px;">🍌</div>
+    <h3 style="font-size:16px;margin-bottom:16px;">${selectedMonth} の月報提出状況</h3>
+    <div class="stat-value" style="font-size:56px;margin-bottom:8px;">${submittedCount}<span style="font-size:24px;"> 人</span></div>
+    <p style="color:var(--text-muted);font-size:15px;">が月報を提出しました！</p>
+  </div>`;
+
+  // 提出者リスト
+  if (submittedCount > 0) {
+    html += `<div class="stat-card" style="margin-top:16px;padding:24px;">
+      <h3 style="margin-bottom:16px;">提出済みメンバー</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        ${submittedNames.map(name => `<span style="
+          display:inline-flex;align-items:center;gap:6px;
+          background:var(--bg2);padding:8px 16px;border-radius:100px;
+          font-size:14px;font-weight:600;color:var(--text);
+        ">✅ ${name}</span>`).join('')}
       </div>
-      <div class="member-preview">${preview || '（未入力）'}</div>
     </div>`;
-  }).join('') + '</div>';
-}
+  } else {
+    html += `<div class="stat-card" style="margin-top:16px;text-align:center;padding:40px;">
+      <p style="color:var(--text-muted);font-size:15px;">まだ誰も提出していません。最初の提出者になろう！</p>
+    </div>`;
+  }
 
-function showReportDetail(id) {
-  const reports = loadReports();
-  const r = reports.find(rep => rep.id === id);
-  if (!r) return;
-  const container = document.getElementById('feedback-content');
-  const d = r.data;
-  const followerDiff = (Number(d.insta_followers_end) || 0) - (Number(d.insta_followers_start) || 0);
-  const diffBadge = followerDiff >= 0
-    ? `<span class="diff-badge positive">+${followerDiff}</span>`
-    : `<span class="diff-badge negative">${followerDiff}</span>`;
-  const fbQuestions = [
-    { num: 1, title: '① うまくいった点は何か？', key: 'fb_q1' },
-    { num: 2, title: '② それはなぜ上手くいったのか？', key: 'fb_q2' },
-    { num: 3, title: '③ 今後も続けたほうがよいことは？', key: 'fb_q3' },
-    { num: 4, title: '④ うまくいかなかった点は？', key: 'fb_q4' },
-    { num: 5, title: '⑤ それはなぜうまくいかなかったのか？', key: 'fb_q5' },
-    { num: 6, title: '⑥ 今後やめたほうがよいことは？', key: 'fb_q6' },
-    { num: 7, title: '⑦ 来月やることは何ですか？', key: 'fb_q7' },
-  ];
-  let html = `<button class="report-back-btn" onclick="renderFeedbackList()">← 一覧に戻る</button>`;
-  html += `<div class="report-detail">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-      <h2 style="font-size:22px">🍌 ${r.name}</h2>
-      <span style="color:var(--text-muted);font-size:14px">${r.month}</span>
-    </div>
-    <div class="report-section">
-      <h3>📸 Instagram</h3>
-      <p>フィード: ${d.insta_feed || 0}投稿 / リール: ${d.insta_reel || 0}投稿</p>
-      <p>フォロワー: ${d.insta_followers_start || 0} → ${d.insta_followers_end || 0} ${diffBadge}</p>
-    </div>
-    <div class="report-section">
-      <h3>📝 その他メディア</h3>
-      <div class="answer">${d.other_media_text || '（未入力）'}</div>
-    </div>
-    <div class="report-section">
-      <h3>💰 売上 / オファー</h3>
-      <p>売上: ¥${(Number(d.sales_amount) || 0).toLocaleString()} / オファー数: ${d.offers_count || 0}</p>
-      <div class="answer">${d.sales_detail || '（未入力）'}</div>
-    </div>
-    ${fbQuestions.map(q => `<div class="report-section">
-      <h3><span class="fb-question-num fb-q${q.num}">${q.num}</span> ${q.title}</h3>
-      <div class="answer">${d[q.key] || '（未入力）'}</div>
-    </div>`).join('')}
-  </div>`;
-  html += `<div class="feedback-section">
-    <h4>📋 フィードバックコメント</h4>
-    <textarea id="feedback-text" placeholder="フィードバックを入力...">${r.feedback || ''}</textarea>
-    <div>
-      <button class="btn-save-feedback" onclick="saveFeedback('${r.id}')">保存する</button>
-      <span class="feedback-saved" id="fb-saved">保存しました！</span>
-    </div>
-  </div>`;
   container.innerHTML = html;
-}
-
-function saveFeedback(id) {
-  const reports = loadReports();
-  const idx = reports.findIndex(r => r.id === id);
-  if (idx === -1) return;
-  reports[idx].feedback = document.getElementById('feedback-text').value;
-  saveReports(reports);
-  const badge = document.getElementById('fb-saved');
-  badge.classList.add('show');
-  setTimeout(() => badge.classList.remove('show'), 2000);
 }
 
 // ========== EXPORT ==========
