@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Banana Group Monthly Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #F5C518;
+  --primary-light: #FFD95A;
+  --primary-dark: #E0A800;
+  --accent: #FFE566;
+  --accent2: #FFF3B0;
+  --accent3: #8BC34A;
+  --bg: #FFF9E6;
+  --bg2: #FFF3CC;
+  --card: #FFFFFF;
+  --text: #3D3520;
+  --text-muted: #8A7D60;
+  --success: #66BB6A;
+  --gradient1: linear-gradient(135deg, #F5C518, #8BC34A);
+  --gradient2: linear-gradient(135deg, #FFD600, #FF9800);
+  --gradient3: linear-gradient(135deg, #66BB6A, #26A69A);
+  --banana-yellow: #F5C518;
+  --banana-green: #7CB342;
+}
+
+body {
+  font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Background animation */
+.bg-animation {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-animation .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  animation: float 8s ease-in-out infinite;
+}
+.bg-animation .orb:nth-child(1) {
+  width: 400px; height: 400px;
+  background: #F5C518;
+  top: -100px; left: -100px;
+}
+.bg-animation .orb:nth-child(2) {
+  width: 300px; height: 300px;
+  background: #FFE566;
+  top: 50%; right: -80px;
+  animation-delay: -3s;
+}
+.bg-animation .orb:nth-child(3) {
+  width: 350px; height: 350px;
+  background: #8BC34A;
+  bottom: -100px; left: 30%;
+  animation-delay: -5s;
+}
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* Banana character */
+.banana-character {
+  display: inline-block;
+  font-size: 48px;
+  animation: bananaWiggle 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(245, 197, 24, 0.4));
+}
+.banana-character.small { font-size: 32px; }
+.banana-character.big { font-size: 80px; }
+@keyframes bananaWiggle {
+  0%, 100% { transform: rotate(-5deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+.banana-float {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  font-size: 120px;
+}
+.banana-float.top-right { top: 60px; right: -20px; transform: rotate(25deg); }
+.banana-float.bottom-left { bottom: 40px; left: -20px; transform: rotate(-15deg); }
+
+/* Navigation */
+.nav-tabs {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: 20px 16px;
+  background: rgba(255, 249, 230, 0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(245, 197, 24, 0.3);
+}
+.nav-tab {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 100px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.nav-tab:hover { color: var(--text); background: rgba(245, 197, 24, 0.1); }
+.nav-tab.active {
+  background: var(--gradient1);
+  color: #3D3520;
+  font-weight: 800;
+  box-shadow: 0 4px 15px rgba(245, 197, 24, 0.4);
+}
+
+/* Main container */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+}
+
+/* Progress bar */
+.progress-container { margin-bottom: 32px; }
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.progress-label { font-size: 14px; color: var(--text-muted); }
+.progress-step {
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.progress-bar {
+  height: 6px;
+  background: var(--bg2);
+  border-radius: 100px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--gradient1);
+  border-radius: 100px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Step dots */
+.step-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.step-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--bg2);
+  border: 2px solid rgba(245, 197, 24, 0.3);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+.step-dot.active {
+  background: var(--banana-yellow);
+  border-color: var(--banana-yellow);
+  transform: scale(1.3);
+  box-shadow: 0 0 12px rgba(255, 214, 0, 0.5);
+}
+.step-dot.completed {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+/* Card */
+.step-card {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 32px 24px;
+  border: 1px solid rgba(245, 197, 24, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.4s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+.step-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--gradient1);
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.step-icon {
+  width: 56px; height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+.step-icon.media { background: linear-gradient(135deg, #81C78420, #81C78440); }
+.step-icon.sales { background: linear-gradient(135deg, #FFD60020, #FFD60040); }
+.step-icon.feedback { background: linear-gradient(135deg, #66BB6A20, #66BB6A40); }
+
+.step-title {
+  font-size: 22px;
+  font-weight: 800;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.step-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* Form elements */
+.form-group { margin-bottom: 20px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+
+input[type="text"],
+input[type="number"],
+input[type="month"],
+textarea,
+select {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg);
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  border-radius: 14px;
+  color: var(--text);
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.3s;
+  outline: none;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--banana-yellow);
+  box-shadow: 0 0 0 4px rgba(255, 214, 0, 0.1);
+}
+textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+
+.diff-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+.diff-badge.positive { background: rgba(102, 187, 106, 0.15); color: var(--success); }
+.diff-badge.negative { background: rgba(255, 107, 107, 0.15); color: #FF6B6B; }
+
+/* Buttons */
+.btn-group { display: flex; gap: 12px; margin-top: 28px; }
+.btn {
+  flex: 1;
+  padding: 16px 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+.btn-back {
+  background: var(--bg);
+  color: var(--text-muted);
+  border: 2px solid rgba(245, 197, 24, 0.15);
+}
+.btn-back:hover { border-color: var(--primary); color: var(--text); }
+.btn-next {
+  background: var(--gradient1);
+  color: #3D3520;
+  box-shadow: 0 4px 15px rgba(245, 197, 24, 0.3);
+}
+.btn-next:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 197, 24, 0.4);
+}
+.btn-next:active { transform: translateY(0); }
+.btn-submit {
+  background: var(--gradient2);
+  color: #3D3520;
+  box-shadow: 0 4px 15px rgba(255, 214, 0, 0.3);
+}
+
+/* Name input screen */
+.name-screen { text-align: center; padding: 40px 20px; }
+.name-screen h1 {
+  font-size: 32px;
+  margin-bottom: 4px;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.name-screen .subtitle-group {
+  color: var(--banana-yellow);
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+.name-screen p { color: var(--text-muted); margin-bottom: 32px; }
+.name-input-wrapper { max-width: 320px; margin: 0 auto 24px; }
+
+/* Completion screen */
+.completion-screen { text-align: center; padding: 40px 20px; }
+.completion-screen .big-emoji {
+  font-size: 80px;
+  margin-bottom: 16px;
+  animation: bounce 0.6s ease-out;
+}
+@keyframes bounce {
+  0% { transform: scale(0); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+.completion-screen h2 { font-size: 28px; margin-bottom: 8px; }
+.completion-screen p { color: var(--text-muted); margin-bottom: 24px; }
+
+/* Slack copy box */
+.slack-copy-section {
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 24px;
+  text-align: left;
+  border: 1px solid rgba(245, 197, 24, 0.15);
+}
+.slack-copy-section h4 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--banana-yellow);
+  margin-bottom: 12px;
+  text-align: center;
+}
+.slack-preview {
+  background: #FFF8E1;
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #5D4E37;
+  white-space: pre-wrap;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 12px;
+  font-family: 'Monaco', 'Menlo', monospace;
+}
+.btn-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 14px;
+  background: var(--gradient1);
+  border: none;
+  border-radius: 12px;
+  color: #3D3520;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+.btn-copy:hover { transform: translateY(-2px); }
+.btn-copy.copied {
+  background: var(--success);
+  color: white;
+}
+
+/* ===== DASHBOARD ===== */
+.dashboard-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+  position: relative;
+  z-index: 1;
+}
+.dashboard-header { text-align: center; margin-bottom: 32px; }
+.dashboard-header h1 {
+  font-size: 28px;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+}
+.stat-card h3 {
+  font-size: 14px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 36px;
+  font-weight: 800;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.chart-card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+  margin-bottom: 16px;
+}
+.chart-card h3 { font-size: 16px; margin-bottom: 16px; }
+.chart-card canvas { max-height: 300px; }
+
+/* Member list */
+.member-list { display: flex; flex-direction: column; gap: 12px; }
+.member-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.member-card:hover { border-color: var(--banana-yellow); transform: translateY(-2px); }
+.member-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.member-name { font-size: 18px; font-weight: 700; }
+.member-date { font-size: 13px; color: var(--text-muted); }
+.member-preview { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+/* Report detail */
+.report-detail {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+  margin-bottom: 16px;
+}
+.report-detail h3 {
+  font-size: 16px; font-weight: 700; margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.report-detail p, .report-detail .answer {
+  font-size: 15px; color: var(--text-muted); line-height: 1.7; white-space: pre-wrap;
+}
+.report-section { margin-bottom: 24px; }
+.report-back-btn {
+  background: var(--bg);
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  color: var(--text-muted);
+  padding: 12px 24px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: all 0.3s;
+}
+.report-back-btn:hover { border-color: var(--primary); color: var(--text); }
+
+/* Feedback section */
+.feedback-section {
+  background: var(--bg);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 16px;
+}
+.feedback-section h4 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--banana-yellow);
+  margin-bottom: 12px;
+}
+.feedback-section textarea { min-height: 100px; margin-bottom: 12px; }
+.btn-save-feedback {
+  padding: 12px 24px;
+  background: var(--gradient2);
+  color: #3D3520;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.feedback-saved {
+  display: inline-block;
+  margin-left: 12px;
+  color: var(--success);
+  font-weight: 600;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.feedback-saved.show { opacity: 1; }
+
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: var(--bg);
+  border: 2px solid rgba(245, 197, 24, 0.2);
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s;
+}
+.export-btn:hover { border-color: var(--banana-yellow); color: var(--text); }
+
+/* Feedback question colors */
+.fb-question-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.fb-q1 { background: #4CAF5030; color: #4CAF50; }
+.fb-q2 { background: #8BC34A30; color: #8BC34A; }
+.fb-q3 { background: #66BB6A30; color: #66BB6A; }
+.fb-q4 { background: #FFD60030; color: #FFD600; }
+.fb-q5 { background: #FFC10730; color: #FFC107; }
+.fb-q6 { background: #FF980030; color: #FF9800; }
+.fb-q7 { background: #26A69A30; color: #26A69A; }
+
+/* Sending indicator */
+.sending-status {
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 8px;
+}
+.sending-status.success { color: var(--success); }
+.sending-status.error { color: #FF6B6B; }
+
+/* Filter row */
+.filter-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.filter-row select { width: auto; min-width: 160px; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .step-card { padding: 24px 18px; }
+  .step-title { font-size: 19px; }
+  .form-row { flex-direction: column; gap: 0; }
+  .nav-tab { padding: 8px 16px; font-size: 13px; }
+}
+
+.page { display: none; }
+.page.active { display: block; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+<div class="banana-float top-right">🍌</div>
+<div class="banana-float bottom-left">🍌</div>
+
+<!-- Navigation -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="showPage('input')">Report</button>
+  <button class="nav-tab" onclick="showPage('dashboard')">Dashboard</button>
+  <button class="nav-tab" onclick="showPage('feedback')">Feedback</button>
+</div>
+
+<!-- ========== INPUT PAGE ========== -->
+<div id="page-input" class="page active">
+<div class="container">
+
+  <!-- Name Screen -->
+  <div id="name-screen" class="step-card name-screen">
+    <div class="banana-character big">🍌</div>
+    <div class="subtitle-group">BANANA GROUP</div>
+    <h1>Monthly Report</h1>
+    <p>おつかれさまです！今月の振り返りを始めましょう</p>
+    <div class="name-input-wrapper">
+      <div class="form-group">
+        <label class="form-label">お名前</label>
+        <input type="text" id="user-name" placeholder="名前を入力してください">
+      </div>
+      <div class="form-group">
+        <label class="form-label">対象月</label>
+        <input type="month" id="report-month">
+      </div>
+    </div>
+    <button class="btn btn-next" style="max-width:320px; margin:0 auto; display:block;" onclick="startReport()">スタート 🍌</button>
+  </div>
+
+  <!-- Progress -->
+  <div id="progress-area" class="hidden">
+    <div class="progress-container">
+      <div class="progress-header">
+        <span class="progress-label"><span class="banana-character small">🍌</span> 進捗</span>
+        <span class="progress-step" id="progress-text">1 / 10</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 10%"></div>
+      </div>
+    </div>
+    <div class="step-dots" id="step-dots"></div>
+  </div>
+
+  <!-- Steps Container -->
+  <div id="steps-container"></div>
+
+  <!-- Completion -->
+  <div id="completion-screen" class="step-card completion-screen hidden"></div>
+
+</div>
+</div>
+
+<!-- ========== DASHBOARD PAGE ========== -->
+<div id="page-dashboard" class="page">
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="banana-character">🍌</div>
+    <h1>Dashboard</h1>
+    <p style="color:var(--text-muted)">数値の推移を確認</p>
+  </div>
+  <div class="filter-row">
+    <select id="dash-member-filter" onchange="renderDashboard()">
+      <option value="all">全メンバー</option>
+    </select>
+    <button class="export-btn" onclick="exportCSV()">CSV出力</button>
+  </div>
+  <div id="dashboard-content"></div>
+</div>
+</div>
+
+<!-- ========== FEEDBACK PAGE ========== -->
+<div id="page-feedback" class="page">
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="banana-character">🍌</div>
+    <h1>Feedback</h1>
+    <p style="color:var(--text-muted)">メンバーの月報を確認・フィードバック</p>
+  </div>
+  <div class="filter-row">
+    <select id="fb-month-filter" onchange="renderFeedbackList()">
+      <option value="all">すべての月</option>
+    </select>
+  </div>
+  <div id="feedback-content"></div>
+</div>
+</div>
+
+<script>
+// =============================================
+// Google Apps Script URL - セットアップ後にここに貼り付け
+// =============================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzWo1B3W-moBg3_ACQsiTym4HoNFZ72amhd5q4XhQc8lv5wzyaE5PnwyELylUD8WqFkow/exec';
+// 例: 'https://script.google.com/macros/s/XXXXX/exec'
+
+// ========== DATA STORE ==========
+const STORAGE_KEY = 'monthly_reports_banana';
+
+function loadReports() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch { return []; }
+}
+function saveReports(reports) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+}
+
+// ========== STEP DEFINITIONS ==========
+const STEPS = [
+  {
+    id: 'instagram', icon: '📸', iconClass: 'media',
+    title: 'Instagram',
+    subtitle: '今月のインスタの投稿数とフォロワー数を記録しましょう',
+    fields: [
+      { key: 'insta_feed', label: 'フィード投稿数', type: 'number', placeholder: '0' },
+      { key: 'insta_reel', label: 'リール投稿数', type: 'number', placeholder: '0' },
+      { key: 'insta_followers_start', label: 'フォロワー数（月初）', type: 'number', placeholder: '0' },
+      { key: 'insta_followers_end', label: 'フォロワー数（月末）', type: 'number', placeholder: '0' },
+    ]
+  },
+  {
+    id: 'other_media', icon: '📝', iconClass: 'media',
+    title: 'その他メディア',
+    subtitle: 'note・X・YouTube・TikTokなど他のメディアの結果',
+    fields: [
+      { key: 'other_media_text', label: '投稿数・フォロワー増減など', type: 'textarea',
+        placeholder: '例）\nnote: 記事5投稿, フォロワー 2→5（+3）\nX: ツイート30投稿, フォロワー 50→80（+30）' },
+    ]
+  },
+  {
+    id: 'sales', icon: '💰', iconClass: 'sales',
+    title: '売上 / オファー結果',
+    subtitle: '今月の売上やオファーの結果を記録しましょう',
+    fields: [
+      { key: 'sales_amount', label: '売上金額（円）', type: 'number', placeholder: '0' },
+      { key: 'offers_count', label: 'オファー数', type: 'number', placeholder: '0' },
+      { key: 'sales_detail', label: '詳細（商品・モニターなど）', type: 'textarea',
+        placeholder: '例）\n・オンラインコース 3件 × ¥30,000\n・モニター募集 5名オファー' },
+    ]
+  },
+  { id: 'fb1', icon: '✨', iconClass: 'feedback', num: 1,
+    title: '① うまくいった点は何か？', subtitle: 'できるだけたくさん挙げてみてください',
+    fields: [{ key: 'fb_q1', label: '', type: 'textarea', placeholder: '今月うまくいったこと...' }]
+  },
+  { id: 'fb2', icon: '🔍', iconClass: 'feedback', num: 2,
+    title: '② それはなぜ上手くいったのか？', subtitle: '①で挙げたことの理由を考えてみましょう',
+    fields: [{ key: 'fb_q2', label: '', type: 'textarea', placeholder: 'うまくいった理由...' }]
+  },
+  { id: 'fb3', icon: '🔄', iconClass: 'feedback', num: 3,
+    title: '③ 今後も続けたほうがよいことは？', subtitle: '②を考慮して、続ける①は何でしょう',
+    fields: [{ key: 'fb_q3', label: '', type: 'textarea', placeholder: '続けていくこと...' }]
+  },
+  { id: 'fb4', icon: '💡', iconClass: 'feedback', num: 4,
+    title: '④ うまくいかなかった点は？', subtitle: '前向きな気づき！改善ポイントを挙げましょう',
+    fields: [{ key: 'fb_q4', label: '', type: 'textarea', placeholder: '改善できること...' }]
+  },
+  { id: 'fb5', icon: '🧐', iconClass: 'feedback', num: 5,
+    title: '⑤ それはなぜうまくいかなかったのか？', subtitle: '④で挙げたことの理由を考えてみましょう',
+    fields: [{ key: 'fb_q5', label: '', type: 'textarea', placeholder: 'うまくいかなかった理由...' }]
+  },
+  { id: 'fb6', icon: '🚫', iconClass: 'feedback', num: 6,
+    title: '⑥ 今後やめたほうがよいことは？', subtitle: '⑤を考慮して手放す④は何でしょう',
+    fields: [{ key: 'fb_q6', label: '', type: 'textarea', placeholder: 'やめること...' }]
+  },
+  { id: 'fb7', icon: '🚀', iconClass: 'feedback', num: 7,
+    title: '⑦ 来月やることは何ですか？', subtitle: '③と新たに取り組んだ方が良さそうなこと',
+    fields: [{ key: 'fb_q7', label: '', type: 'textarea', placeholder: '来月のアクション...' }]
+  },
+];
+
+const TOTAL_STEPS = STEPS.length;
+let currentStep = 0;
+let formData = {};
+
+// ========== INIT ==========
+function init() {
+  const now = new Date();
+  document.getElementById('report-month').value =
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const dotsEl = document.getElementById('step-dots');
+  dotsEl.innerHTML = STEPS.map((_, i) =>
+    `<div class="step-dot" data-step="${i}" onclick="goToStep(${i})"></div>`
+  ).join('');
+  renderStep();
+}
+
+function startReport() {
+  const name = document.getElementById('user-name').value.trim();
+  if (!name) {
+    document.getElementById('user-name').focus();
+    document.getElementById('user-name').style.borderColor = '#FF6B6B';
+    return;
+  }
+  formData.name = name;
+  formData.month = document.getElementById('report-month').value;
+  document.getElementById('name-screen').classList.add('hidden');
+  document.getElementById('progress-area').classList.remove('hidden');
+  renderStep();
+}
+
+function renderStep() {
+  if (currentStep >= TOTAL_STEPS) return;
+  const step = STEPS[currentStep];
+  const pct = ((currentStep + 1) / TOTAL_STEPS) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = `${currentStep + 1} / ${TOTAL_STEPS}`;
+  document.querySelectorAll('.step-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentStep);
+    dot.classList.toggle('completed', i < currentStep);
+  });
+
+  let fieldsHTML = step.fields.map(f => {
+    const val = formData[f.key] || '';
+    if (f.type === 'textarea') {
+      return `<div class="form-group">
+        ${f.label ? `<label class="form-label">${f.label}</label>` : ''}
+        <textarea id="field-${f.key}" placeholder="${f.placeholder}">${val}</textarea>
+      </div>`;
+    } else {
+      return `<div class="form-group">
+        <label class="form-label">${f.label}</label>
+        <input type="${f.type}" id="field-${f.key}" value="${val}" placeholder="${f.placeholder}">
+      </div>`;
+    }
+  }).join('');
+
+  if (step.fields.every(f => f.type === 'number')) {
+    const pairs = [];
+    for (let i = 0; i < step.fields.length; i += 2) {
+      const f1 = step.fields[i], f2 = step.fields[i + 1];
+      let row = `<div class="form-row"><div class="form-group">
+        <label class="form-label">${f1.label}</label>
+        <input type="number" id="field-${f1.key}" value="${formData[f1.key] || ''}" placeholder="${f1.placeholder}">
+      </div>`;
+      if (f2) {
+        row += `<div class="form-group">
+          <label class="form-label">${f2.label}</label>
+          <input type="number" id="field-${f2.key}" value="${formData[f2.key] || ''}" placeholder="${f2.placeholder}">
+        </div>`;
+      }
+      row += `</div>`;
+      pairs.push(row);
+    }
+    fieldsHTML = pairs.join('');
+  }
+
+  const numClass = step.num ? `fb-q${step.num}` : '';
+  const html = `<div class="step-card" id="step-card">
+    <div class="step-icon ${step.iconClass}">${step.icon}</div>
+    ${step.num ? `<div class="fb-question-num ${numClass}">${step.num}</div>` : ''}
+    <div class="step-title">${step.title}</div>
+    <div class="step-subtitle">${step.subtitle}</div>
+    ${fieldsHTML}
+    <div class="btn-group">
+      ${currentStep > 0 ? '<button class="btn btn-back" onclick="prevStep()">戻る</button>' : ''}
+      <button class="btn ${currentStep === TOTAL_STEPS - 1 ? 'btn-submit' : 'btn-next'}" onclick="nextStep()">
+        ${currentStep === TOTAL_STEPS - 1 ? '提出する 🍌' : '次へ →'}
+      </button>
+    </div>
+  </div>`;
+
+  document.getElementById('steps-container').innerHTML = html;
+  const firstField = document.querySelector('#step-card input, #step-card textarea');
+  if (firstField) setTimeout(() => firstField.focus(), 300);
+}
+
+function saveCurrentFields() {
+  const step = STEPS[currentStep];
+  step.fields.forEach(f => {
+    const el = document.getElementById(`field-${f.key}`);
+    if (el) formData[f.key] = el.value;
+  });
+}
+function nextStep() {
+  saveCurrentFields();
+  if (currentStep < TOTAL_STEPS - 1) { currentStep++; renderStep(); }
+  else { submitReport(); }
+}
+function prevStep() {
+  saveCurrentFields();
+  if (currentStep > 0) { currentStep--; renderStep(); }
+}
+function goToStep(i) {
+  if (i >= 0 && i < TOTAL_STEPS) { saveCurrentFields(); currentStep = i; renderStep(); }
+}
+
+// ========== BUILD SLACK TEXT ==========
+function buildSlackText(d) {
+  const followerDiff = (Number(d.insta_followers_end) || 0) - (Number(d.insta_followers_start) || 0);
+  const diffStr = followerDiff >= 0 ? `+${followerDiff}` : `${followerDiff}`;
+
+  return `🍌 *${d.month} 月報* 🍌
+━━━━━━━━━━━━━━━━━━
+
+📸 *メディア結果*
+Instagram:
+  フィード ${d.insta_feed || 0}投稿 / リール ${d.insta_reel || 0}投稿
+  フォロワー ${d.insta_followers_start || 0} → ${d.insta_followers_end || 0}（${diffStr}）
+
+${d.other_media_text ? `その他:\n${d.other_media_text}` : ''}
+
+💰 *売上 / オファー結果*
+売上: ¥${(Number(d.sales_amount) || 0).toLocaleString()}
+オファー数: ${d.offers_count || 0}件
+${d.sales_detail || ''}
+
+━━━━━━━━━━━━━━━━━━
+✨ *7つのフィードバック*
+
+*① うまくいった点*
+${d.fb_q1 || ''}
+
+*② なぜうまくいったか*
+${d.fb_q2 || ''}
+
+*③ 続けること*
+${d.fb_q3 || ''}
+
+*④ うまくいかなかった点*
+${d.fb_q4 || ''}
+
+*⑤ なぜうまくいかなかったか*
+${d.fb_q5 || ''}
+
+*⑥ やめること*
+${d.fb_q6 || ''}
+
+*⑦ 来月やること*
+${d.fb_q7 || ''}
+
+━━━━━━━━━━━━━━━━━━`;
+}
+
+// ========== SUBMIT ==========
+function submitReport() {
+  const slackText = buildSlackText(formData);
+  const report = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    name: formData.name,
+    month: formData.month,
+    submittedAt: new Date().toISOString(),
+    data: { ...formData },
+    feedback: '',
+    slackText
+  };
+
+  const reports = loadReports();
+  reports.push(report);
+  saveReports(reports);
+
+  // Send to Google Sheets
+  let gasStatus = '';
+  if (GAS_URL) {
+    gasStatus = '<div class="sending-status" id="gas-status">📡 Googleスプレッドシートに送信中...</div>';
+    sendToGAS(report);
+  }
+
+  // Show completion with slack copy
+  document.getElementById('progress-area').classList.add('hidden');
+  document.getElementById('steps-container').innerHTML = '';
+  const comp = document.getElementById('completion-screen');
+  comp.classList.remove('hidden');
+  comp.innerHTML = `
+    <div class="big-emoji"><span class="banana-character big">🍌</span></div>
+    <h2>おつかれさまでした！</h2>
+    <p>月報の提出が完了しました。来月も頑張りましょう！</p>
+    ${gasStatus}
+    <div class="slack-copy-section">
+      <h4>Slack投稿用テキスト</h4>
+      <div class="slack-preview" id="slack-preview">${escapeHTML(slackText)}</div>
+      <button class="btn-copy" id="btn-copy" onclick="copySlackText()">
+        📋 コピーしてSlackに貼り付け
+      </button>
+    </div>
+    <button class="btn btn-next" onclick="resetForm()" style="max-width: 240px; margin: 24px auto 0; display:block;">新しいレポートを書く</button>
+  `;
+
+  // Confetti!
+  if (typeof confetti === 'function') {
+    confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 },
+      colors: ['#FFD600', '#4CAF50', '#8BC34A', '#FFEB3B', '#66BB6A'] });
+    setTimeout(() => confetti({ particleCount: 80, spread: 100, origin: { y: 0.5 },
+      colors: ['#FFD600', '#4CAF50', '#8BC34A'] }), 300);
+  }
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copySlackText() {
+  const text = document.getElementById('slack-preview').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.innerHTML = '📋 コピーしてSlackに貼り付け';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+// ========== GOOGLE APPS SCRIPT ==========
+function sendToGAS(report) {
+  if (!GAS_URL) return;
+  const d = report.data;
+  const followerDiff = (Number(d.insta_followers_end) || 0) - (Number(d.insta_followers_start) || 0);
+  const payload = {
+    name: report.name,
+    month: report.month,
+    submittedAt: report.submittedAt,
+    insta_feed: d.insta_feed || '0',
+    insta_reel: d.insta_reel || '0',
+    insta_followers_start: d.insta_followers_start || '0',
+    insta_followers_end: d.insta_followers_end || '0',
+    insta_followers_diff: String(followerDiff),
+    other_media: d.other_media_text || '',
+    sales_amount: d.sales_amount || '0',
+    offers_count: d.offers_count || '0',
+    sales_detail: d.sales_detail || '',
+    fb_q1: d.fb_q1 || '', fb_q2: d.fb_q2 || '', fb_q3: d.fb_q3 || '',
+    fb_q4: d.fb_q4 || '', fb_q5: d.fb_q5 || '', fb_q6: d.fb_q6 || '', fb_q7: d.fb_q7 || '',
+    slackText: report.slackText || ''
+  };
+
+  fetch(GAS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    const el = document.getElementById('gas-status');
+    if (el) { el.textContent = '✅ スプレッドシートに送信完了！'; el.className = 'sending-status success'; }
+  }).catch(() => {
+    const el = document.getElementById('gas-status');
+    if (el) { el.textContent = '⚠️ 送信に失敗しました（ローカルには保存済み）'; el.className = 'sending-status error'; }
+  });
+}
+
+function resetForm() {
+  currentStep = 0;
+  formData = {};
+  document.getElementById('name-screen').classList.remove('hidden');
+  document.getElementById('completion-screen').classList.add('hidden');
+  document.getElementById('progress-area').classList.add('hidden');
+  document.getElementById('steps-container').innerHTML = '';
+  document.getElementById('user-name').value = '';
+  document.getElementById('user-name').style.borderColor = '';
+}
+
+// ========== PAGES ==========
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${page}`).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['input', 'dashboard', 'feedback'][i] === page);
+  });
+  if (page === 'dashboard') renderDashboard();
+  if (page === 'feedback') renderFeedbackList();
+}
+
+// ========== DASHBOARD ==========
+function renderDashboard() {
+  const reports = loadReports();
+  const container = document.getElementById('dashboard-content');
+  const filterEl = document.getElementById('dash-member-filter');
+  const members = [...new Set(reports.map(r => r.name))];
+  const currentFilter = filterEl.value;
+  filterEl.innerHTML = '<option value="all">全メンバー</option>' +
+    members.map(m => `<option value="${m}" ${m === currentFilter ? 'selected' : ''}>${m}</option>`).join('');
+  const filtered = currentFilter === 'all' ? reports : reports.filter(r => r.name === currentFilter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="stat-card" style="text-align:center;padding:40px"><p style="color:var(--text-muted)">まだレポートがありません</p></div>';
+    return;
+  }
+  filtered.sort((a, b) => (a.month || '').localeCompare(b.month || ''));
+  const latestSales = filtered.filter(r => r.data.sales_amount).map(r => Number(r.data.sales_amount) || 0);
+  const totalSales = latestSales.reduce((s, v) => s + v, 0);
+  const latestFollowers = filtered.map(r => Number(r.data.insta_followers_end) || 0).filter(v => v > 0);
+  const maxFollowers = latestFollowers.length ? Math.max(...latestFollowers) : 0;
+
+  let html = `<div class="dashboard-grid">
+    <div class="stat-card"><h3>Total Reports</h3><div class="stat-value">${filtered.length}</div></div>
+    <div class="stat-card"><h3>累計売上</h3><div class="stat-value">¥${totalSales.toLocaleString()}</div></div>
+    <div class="stat-card"><h3>最新フォロワー数</h3><div class="stat-value">${maxFollowers.toLocaleString()}</div></div>
+  </div>`;
+  html += `<div class="chart-card"><h3>📸 Instagram フォロワー推移</h3><canvas id="chart-followers"></canvas></div>`;
+  html += `<div class="chart-card"><h3>💰 売上推移</h3><canvas id="chart-sales"></canvas></div>`;
+  html += `<div class="chart-card"><h3>📝 投稿数推移</h3><canvas id="chart-posts"></canvas></div>`;
+  container.innerHTML = html;
+
+  const labels = filtered.map(r => {
+    const name = currentFilter === 'all' ? `${r.name} ` : '';
+    return name + (r.month || '?');
+  });
+  new Chart(document.getElementById('chart-followers'), {
+    type: 'line',
+    data: { labels, datasets: [{
+      label: 'フォロワー数',
+      data: filtered.map(r => Number(r.data.insta_followers_end) || 0),
+      borderColor: '#4CAF50', backgroundColor: 'rgba(245, 197, 24, 0.1)',
+      fill: true, tension: 0.4, pointRadius: 6, pointBackgroundColor: '#FFD600',
+    }]},
+    options: chartOptions('人')
+  });
+  new Chart(document.getElementById('chart-sales'), {
+    type: 'bar',
+    data: { labels, datasets: [{
+      label: '売上',
+      data: filtered.map(r => Number(r.data.sales_amount) || 0),
+      backgroundColor: 'rgba(255, 214, 0, 0.6)', borderColor: '#FFD600', borderWidth: 2, borderRadius: 8,
+    }]},
+    options: chartOptions('円')
+  });
+  new Chart(document.getElementById('chart-posts'), {
+    type: 'bar',
+    data: { labels, datasets: [
+      { label: 'フィード', data: filtered.map(r => Number(r.data.insta_feed) || 0),
+        backgroundColor: 'rgba(76, 175, 80, 0.6)', borderRadius: 6 },
+      { label: 'リール', data: filtered.map(r => Number(r.data.insta_reel) || 0),
+        backgroundColor: 'rgba(139, 195, 74, 0.6)', borderRadius: 6 },
+    ]},
+    options: chartOptions('件')
+  });
+}
+
+function chartOptions(unit) {
+  return {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { labels: { color: '#8A7D60', font: { size: 12 } } } },
+    scales: {
+      x: { ticks: { color: '#8A7D60', font: { size: 11 } }, grid: { color: 'rgba(245,197,24,0.05)' } },
+      y: { ticks: { color: '#8A7D60', callback: v => unit === '円' ? '¥' + v.toLocaleString() : v + unit },
+        grid: { color: 'rgba(245,197,24,0.08)' } }
+    }
+  };
+}
+
+// ========== FEEDBACK ==========
+function renderFeedbackList() {
+  const reports = loadReports();
+  const container = document.getElementById('feedback-content');
+  const filterEl = document.getElementById('fb-month-filter');
+  const months = [...new Set(reports.map(r => r.month).filter(Boolean))].sort().reverse();
+  const currentFilter = filterEl.value;
+  filterEl.innerHTML = '<option value="all">すべての月</option>' +
+    months.map(m => `<option value="${m}" ${m === currentFilter ? 'selected' : ''}>${m}</option>`).join('');
+  const filtered = currentFilter === 'all' ? reports : reports.filter(r => r.month === currentFilter);
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="stat-card" style="text-align:center;padding:40px"><p style="color:var(--text-muted)">まだレポートがありません</p></div>';
+    return;
+  }
+  filtered.sort((a, b) => (b.submittedAt || '').localeCompare(a.submittedAt || ''));
+  container.innerHTML = '<div class="member-list">' + filtered.map(r => {
+    const date = r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('ja-JP') : '';
+    const preview = r.data.fb_q1 ? r.data.fb_q1.substring(0, 80) + (r.data.fb_q1.length > 80 ? '...' : '') : '';
+    const hasFeedback = r.feedback ? ' ✅' : '';
+    return `<div class="member-card" onclick="showReportDetail('${r.id}')">
+      <div class="member-card-header">
+        <span class="member-name">${r.name}${hasFeedback}</span>
+        <span class="member-date">${r.month} | ${date}</span>
+      </div>
+      <div class="member-preview">${preview || '（未入力）'}</div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+function showReportDetail(id) {
+  const reports = loadReports();
+  const r = reports.find(rep => rep.id === id);
+  if (!r) return;
+  const container = document.getElementById('feedback-content');
+  const d = r.data;
+  const followerDiff = (Number(d.insta_followers_end) || 0) - (Number(d.insta_followers_start) || 0);
+  const diffBadge = followerDiff >= 0
+    ? `<span class="diff-badge positive">+${followerDiff}</span>`
+    : `<span class="diff-badge negative">${followerDiff}</span>`;
+  const fbQuestions = [
+    { num: 1, title: '① うまくいった点は何か？', key: 'fb_q1' },
+    { num: 2, title: '② それはなぜ上手くいったのか？', key: 'fb_q2' },
+    { num: 3, title: '③ 今後も続けたほうがよいことは？', key: 'fb_q3' },
+    { num: 4, title: '④ うまくいかなかった点は？', key: 'fb_q4' },
+    { num: 5, title: '⑤ それはなぜうまくいかなかったのか？', key: 'fb_q5' },
+    { num: 6, title: '⑥ 今後やめたほうがよいことは？', key: 'fb_q6' },
+    { num: 7, title: '⑦ 来月やることは何ですか？', key: 'fb_q7' },
+  ];
+  let html = `<button class="report-back-btn" onclick="renderFeedbackList()">← 一覧に戻る</button>`;
+  html += `<div class="report-detail">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="font-size:22px">🍌 ${r.name}</h2>
+      <span style="color:var(--text-muted);font-size:14px">${r.month}</span>
+    </div>
+    <div class="report-section">
+      <h3>📸 Instagram</h3>
+      <p>フィード: ${d.insta_feed || 0}投稿 / リール: ${d.insta_reel || 0}投稿</p>
+      <p>フォロワー: ${d.insta_followers_start || 0} → ${d.insta_followers_end || 0} ${diffBadge}</p>
+    </div>
+    <div class="report-section">
+      <h3>📝 その他メディア</h3>
+      <div class="answer">${d.other_media_text || '（未入力）'}</div>
+    </div>
+    <div class="report-section">
+      <h3>💰 売上 / オファー</h3>
+      <p>売上: ¥${(Number(d.sales_amount) || 0).toLocaleString()} / オファー数: ${d.offers_count || 0}</p>
+      <div class="answer">${d.sales_detail || '（未入力）'}</div>
+    </div>
+    ${fbQuestions.map(q => `<div class="report-section">
+      <h3><span class="fb-question-num fb-q${q.num}">${q.num}</span> ${q.title}</h3>
+      <div class="answer">${d[q.key] || '（未入力）'}</div>
+    </div>`).join('')}
+  </div>`;
+  html += `<div class="feedback-section">
+    <h4>📋 フィードバックコメント</h4>
+    <textarea id="feedback-text" placeholder="フィードバックを入力...">${r.feedback || ''}</textarea>
+    <div>
+      <button class="btn-save-feedback" onclick="saveFeedback('${r.id}')">保存する</button>
+      <span class="feedback-saved" id="fb-saved">保存しました！</span>
+    </div>
+  </div>`;
+  container.innerHTML = html;
+}
+
+function saveFeedback(id) {
+  const reports = loadReports();
+  const idx = reports.findIndex(r => r.id === id);
+  if (idx === -1) return;
+  reports[idx].feedback = document.getElementById('feedback-text').value;
+  saveReports(reports);
+  const badge = document.getElementById('fb-saved');
+  badge.classList.add('show');
+  setTimeout(() => badge.classList.remove('show'), 2000);
+}
+
+// ========== EXPORT ==========
+function exportCSV() {
+  const reports = loadReports();
+  if (reports.length === 0) return alert('データがありません');
+  const headers = ['名前','月','提出日','フィード投稿','リール投稿','フォロワー(月初)','フォロワー(月末)','フォロワー増減','売上','オファー数','その他メディア','売上詳細','Q1_うまくいった点','Q2_なぜうまくいったか','Q3_続けること','Q4_うまくいかなかった点','Q5_なぜうまくいかなかったか','Q6_やめること','Q7_来月やること','フィードバック'];
+  const rows = reports.map(r => {
+    const d = r.data;
+    const diff = (Number(d.insta_followers_end) || 0) - (Number(d.insta_followers_start) || 0);
+    return [r.name, r.month, r.submittedAt ? new Date(r.submittedAt).toLocaleDateString('ja-JP') : '',
+      d.insta_feed||0, d.insta_reel||0, d.insta_followers_start||0, d.insta_followers_end||0, diff,
+      d.sales_amount||0, d.offers_count||0, csvEsc(d.other_media_text||''), csvEsc(d.sales_detail||''),
+      csvEsc(d.fb_q1||''), csvEsc(d.fb_q2||''), csvEsc(d.fb_q3||''),
+      csvEsc(d.fb_q4||''), csvEsc(d.fb_q5||''), csvEsc(d.fb_q6||''),
+      csvEsc(d.fb_q7||''), csvEsc(r.feedback||'')];
+  });
+  const csv = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `monthly_reports_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+function csvEsc(s) { return s ? '"' + s.replace(/"/g,'""').replace(/\n/g,' ') + '"' : '""'; }
+
+init();
+</script>
+</body>
+</html>
