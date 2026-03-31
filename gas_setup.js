@@ -13,12 +13,65 @@
 // 6. index.html の GAS_URL にそのURLを貼り付け
 //    例: const GAS_URL = 'https://script.google.com/macros/s/XXXXX/exec';
 //
+// ※ admin.html を使う場合、GAS_URL は同じURLを使います
+// ※ コード変更後は「新しいデプロイ」で再デプロイが必要です
+//
 // ============================================
 
+// ========== データ読み取り（admin.html用） ==========
+function doGet(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var data = sheet.getDataRange().getValues();
+
+    if (data.length <= 1) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok', data: [] }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var headers = data[0];
+    var rows = [];
+    for (var i = 1; i < data.length; i++) {
+      var row = {};
+      for (var j = 0; j < headers.length; j++) {
+        row[headers[j]] = data[i][j];
+      }
+      row['_row'] = i + 1;
+      rows.push(row);
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok', data: rows }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'error', message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ========== データ書き込み ==========
 function doPost(e) {
   try {
     var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
     var data = JSON.parse(e.postData.contents);
+
+    // フィードバック送信済みの更新
+    if (data.action === 'update_feedback_sent') {
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var colIndex = headers.indexOf('フィードバック送信済み') + 1;
+      if (colIndex === 0) {
+        // 列が無ければ追加
+        colIndex = sheet.getLastColumn() + 1;
+        sheet.getRange(1, colIndex).setValue('フィードバック送信済み');
+      }
+      sheet.getRange(data.row, colIndex).setValue(data.value ? 'TRUE' : 'FALSE');
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
     // ヘッダーが無ければ作成
     if (sheet.getLastRow() === 0) {
@@ -31,7 +84,8 @@ function doPost(e) {
         'Q1_うまくいった点', 'Q2_なぜうまくいったか', 'Q3_続けること',
         'Q4_うまくいかなかった点', 'Q5_なぜうまくいかなかったか', 'Q6_やめること',
         'Q7_来月やること',
-        'Slack用まとめテキスト'
+        'Slack用まとめテキスト',
+        'フィードバック送信済み'
       ]);
     }
 
@@ -56,7 +110,8 @@ function doPost(e) {
       data.fb_q5 || '',
       data.fb_q6 || '',
       data.fb_q7 || '',
-      data.slackText || ''
+      data.slackText || '',
+      'FALSE'
     ]);
 
     return ContentService

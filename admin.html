@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Banana Group Monthly Report</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --primary: #F5C518;
+  --primary-light: #FFD95A;
+  --primary-dark: #E0A800;
+  --accent: #FFE566;
+  --accent2: #FFF3B0;
+  --accent3: #8BC34A;
+  --bg: #FFF9E6;
+  --bg2: #FFF3CC;
+  --card: #FFFFFF;
+  --text: #3D3520;
+  --text-muted: #8A7D60;
+  --success: #66BB6A;
+  --gradient1: linear-gradient(135deg, #F5C518, #8BC34A);
+  --gradient2: linear-gradient(135deg, #FFD600, #FF9800);
+  --gradient3: linear-gradient(135deg, #66BB6A, #26A69A);
+  --banana-yellow: #F5C518;
+  --banana-green: #7CB342;
+}
+
+body {
+  font-family: 'Segoe UI', 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* Background */
+.bg-animation {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.bg-animation .orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  animation: float 8s ease-in-out infinite;
+}
+.bg-animation .orb:nth-child(1) { width: 400px; height: 400px; background: #F5C518; top: -100px; left: -100px; }
+.bg-animation .orb:nth-child(2) { width: 300px; height: 300px; background: #FFE566; top: 50%; right: -80px; animation-delay: -3s; }
+.bg-animation .orb:nth-child(3) { width: 350px; height: 350px; background: #8BC34A; bottom: -100px; left: 30%; animation-delay: -5s; }
+@keyframes float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+.banana-character {
+  display: inline-block;
+  font-size: 48px;
+  animation: bananaWiggle 2s ease-in-out infinite;
+  filter: drop-shadow(0 4px 12px rgba(245, 197, 24, 0.4));
+}
+@keyframes bananaWiggle {
+  0%, 100% { transform: rotate(-5deg); }
+  25% { transform: rotate(5deg); }
+  50% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+/* Container */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px 16px 100px;
+}
+
+/* Login */
+.login-card {
+  max-width: 400px;
+  margin: 80px auto;
+  background: var(--card);
+  border-radius: 24px;
+  padding: 40px 32px;
+  text-align: center;
+  border: 1px solid rgba(245, 197, 24, 0.15);
+  box-shadow: 0 8px 32px rgba(245, 197, 24, 0.1);
+  position: relative;
+  z-index: 1;
+}
+.login-card h1 {
+  font-size: 24px;
+  margin: 16px 0 8px;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.login-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+
+.form-group { margin-bottom: 16px; text-align: left; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: inherit;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.3s;
+}
+.form-input:focus { border-color: var(--banana-yellow); box-shadow: 0 0 0 4px rgba(245, 197, 24, 0.1); }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 20px;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.checkbox-row input[type="checkbox"] {
+  width: 18px; height: 18px;
+  accent-color: var(--banana-yellow);
+}
+
+.btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-primary {
+  background: var(--gradient1);
+  color: var(--text);
+  width: 100%;
+  box-shadow: 0 4px 15px rgba(245, 197, 24, 0.3);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(245, 197, 24, 0.4); }
+
+.login-error {
+  color: #e53935;
+  font-size: 14px;
+  margin-top: 12px;
+  display: none;
+}
+
+/* Header */
+.admin-header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-top: 20px;
+}
+.admin-header h1 {
+  font-size: 28px;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+.admin-header p { color: var(--text-muted); font-size: 14px; }
+.logout-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--bg2);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  z-index: 10;
+}
+.logout-btn:hover { background: rgba(245, 197, 24, 0.2); }
+
+/* Filter & Summary */
+.filter-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.filter-row select {
+  padding: 10px 16px;
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: inherit;
+  background: var(--card);
+  color: var(--text);
+  outline: none;
+  flex: 1;
+}
+
+.summary-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.summary-card {
+  flex: 1;
+  background: var(--card);
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+}
+.summary-card .num {
+  font-size: 32px;
+  font-weight: 800;
+  background: var(--gradient1);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.summary-card .label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+/* Report cards */
+.report-list { display: flex; flex-direction: column; gap: 12px; }
+.report-card {
+  background: var(--card);
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.report-card:hover { border-color: var(--banana-yellow); transform: translateY(-2px); }
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.report-card-name { font-size: 18px; font-weight: 700; }
+.report-card-meta { font-size: 13px; color: var(--text-muted); }
+.report-card-stats { font-size: 14px; color: var(--text-muted); }
+.badge-sent {
+  display: inline-block;
+  background: var(--success);
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-left: 8px;
+}
+.badge-unsent {
+  display: inline-block;
+  background: var(--bg2);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 100px;
+  margin-left: 8px;
+}
+
+/* Detail */
+.back-btn {
+  background: var(--bg);
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  color: var(--text-muted);
+  padding: 10px 20px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  font-weight: 600;
+  margin-bottom: 20px;
+  transition: all 0.3s;
+}
+.back-btn:hover { border-color: var(--banana-yellow); }
+
+.detail-card {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 28px;
+  border: 1px solid rgba(245, 197, 24, 0.1);
+  margin-bottom: 16px;
+}
+.detail-section { margin-bottom: 20px; }
+.detail-section h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.detail-section p, .detail-section .answer {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+/* AI Feedback */
+.ai-section {
+  background: var(--card);
+  border-radius: 20px;
+  padding: 28px;
+  border: 2px solid rgba(245, 197, 24, 0.2);
+  margin-bottom: 16px;
+}
+.ai-section h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-generate {
+  background: var(--gradient2);
+  color: white;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+.btn-generate:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(255, 152, 0, 0.3); }
+.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.feedback-textarea {
+  width: 100%;
+  min-height: 250px;
+  padding: 16px;
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  border-radius: 14px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  line-height: 1.7;
+  resize: vertical;
+  background: var(--bg);
+  outline: none;
+  margin-top: 16px;
+}
+.feedback-textarea:focus { border-color: var(--banana-yellow); }
+
+.action-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn-copy {
+  background: var(--gradient1);
+  color: var(--text);
+  padding: 12px 24px;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.btn-copy:hover { transform: translateY(-1px); }
+.btn-copy.copied { background: var(--gradient3); color: white; }
+
+.slack-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  padding: 12px 16px;
+  background: var(--bg);
+  border-radius: 12px;
+  border: 2px solid rgba(245, 197, 24, 0.15);
+  transition: all 0.3s;
+}
+.slack-check:has(input:checked) { border-color: var(--success); background: rgba(102, 187, 106, 0.1); }
+.slack-check input { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
+
+.loading-spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 152, 0, 0.3);
+  border-top-color: #FF9800;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-muted);
+}
+.empty-state .banana-character { font-size: 64px; margin-bottom: 16px; }
+
+.status-msg {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-top: 12px;
+  display: none;
+}
+.status-msg.success { display: block; background: rgba(102, 187, 106, 0.15); color: #2e7d32; }
+.status-msg.error { display: block; background: rgba(229, 57, 53, 0.1); color: #c62828; }
+
+/* Responsive */
+@media (max-width: 480px) {
+  .container { padding: 12px 12px 80px; }
+  .login-card { margin: 40px 16px; padding: 32px 24px; }
+  .summary-row { flex-direction: column; }
+  .action-row { flex-direction: column; }
+  .action-row .btn-copy, .action-row .slack-check { width: 100%; justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg-animation">
+  <div class="orb"></div>
+  <div class="orb"></div>
+  <div class="orb"></div>
+</div>
+
+<!-- ========== LOGIN ========== -->
+<div id="screen-login">
+  <div class="login-card">
+    <div class="banana-character">🍌</div>
+    <h1>管理者ページ</h1>
+    <p>パスワードを入力してログインしてください</p>
+
+    <div class="form-group">
+      <label class="form-label">パスワード</label>
+      <input type="password" id="login-password" class="form-input" placeholder="パスワードを入力">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Claude API キー</label>
+      <input type="password" id="login-apikey" class="form-input" placeholder="sk-ant-...">
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="save-apikey" checked>
+      <label for="save-apikey">APIキーをこのブラウザに保存する</label>
+    </div>
+    <button class="btn btn-primary" onclick="doLogin()">ログイン</button>
+    <div class="login-error" id="login-error">パスワードが違います</div>
+  </div>
+</div>
+
+<!-- ========== MAIN ========== -->
+<div id="screen-main" style="display:none;">
+  <button class="logout-btn" onclick="doLogout()">ログアウト</button>
+  <div class="container">
+    <div class="admin-header">
+      <div class="banana-character">🍌</div>
+      <h1>管理者ページ</h1>
+      <p>月報フィードバック管理</p>
+    </div>
+
+    <!-- List View -->
+    <div id="view-list">
+      <div class="filter-row">
+        <select id="month-filter" onchange="renderList()"></select>
+      </div>
+      <div class="summary-row" id="summary-row"></div>
+      <div id="report-list"></div>
+    </div>
+
+    <!-- Detail View -->
+    <div id="view-detail" style="display:none;"></div>
+  </div>
+</div>
+
+<script>
+// =============================================
+// Config
+// =============================================
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbxdXMLG1KXo9CZGAvDR1Uy4DtarCrAhE6lGCGw9-8zcaliAn-0zIYeirMF7dJhAU6opXQ/exec';
+const ADMIN_HASH = '86ff36aa8012fbcb83ae24004987e5d06697275dadb82d6d1e5ffbe7f3a9718c';
+
+let allReports = [];
+let claudeApiKey = '';
+
+// =============================================
+// Login
+// =============================================
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('admin_apikey');
+  if (saved) document.getElementById('login-apikey').value = saved;
+
+  document.getElementById('login-password').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+  document.getElementById('login-apikey').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doLogin();
+  });
+});
+
+async function doLogin() {
+  const pw = document.getElementById('login-password').value;
+  const apikey = document.getElementById('login-apikey').value.trim();
+  const saveKey = document.getElementById('save-apikey').checked;
+
+  const encoded = new TextEncoder().encode(pw);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', encoded);
+  const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  if (hashHex !== ADMIN_HASH) {
+    document.getElementById('login-error').style.display = 'block';
+    return;
+  }
+
+  claudeApiKey = apikey;
+  if (saveKey && apikey) {
+    localStorage.setItem('admin_apikey', apikey);
+  } else {
+    localStorage.removeItem('admin_apikey');
+  }
+
+  document.getElementById('screen-login').style.display = 'none';
+  document.getElementById('screen-main').style.display = 'block';
+  loadData();
+}
+
+function doLogout() {
+  document.getElementById('screen-main').style.display = 'none';
+  document.getElementById('screen-login').style.display = 'block';
+  document.getElementById('login-password').value = '';
+  claudeApiKey = '';
+}
+
+// =============================================
+// Data Loading
+// =============================================
+async function loadData() {
+  const listEl = document.getElementById('report-list');
+  listEl.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div> データを読み込み中...</div>';
+
+  try {
+    const res = await fetch(GAS_URL);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      allReports = json.data;
+      renderList();
+    } else {
+      listEl.innerHTML = '<div class="empty-state">データの取得に失敗しました</div>';
+    }
+  } catch (err) {
+    listEl.innerHTML = '<div class="empty-state">通信エラーが発生しました<br><small>' + escapeHTML(err.message) + '</small></div>';
+  }
+}
+
+// =============================================
+// List View
+// =============================================
+function renderList() {
+  document.getElementById('view-list').style.display = 'block';
+  document.getElementById('view-detail').style.display = 'none';
+
+  const filterEl = document.getElementById('month-filter');
+  const months = [...new Set(allReports.map(r => r['対象月']).filter(Boolean))].sort().reverse();
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const selected = filterEl.value || currentMonth;
+
+  filterEl.innerHTML = months.map(m =>
+    `<option value="${m}" ${m === selected ? 'selected' : ''}>${m}</option>`
+  ).join('');
+  if (!months.includes(selected) && months.length) filterEl.value = months[0];
+
+  const filtered = allReports.filter(r => r['対象月'] === (filterEl.value || selected));
+  const sentCount = filtered.filter(r => r['フィードバック送信済み'] === 'TRUE' || r['フィードバック送信済み'] === true).length;
+
+  document.getElementById('summary-row').innerHTML = `
+    <div class="summary-card"><div class="num">${filtered.length}</div><div class="label">提出数</div></div>
+    <div class="summary-card"><div class="num">${sentCount}</div><div class="label">FB送信済み</div></div>
+    <div class="summary-card"><div class="num">${filtered.length - sentCount}</div><div class="label">未送信</div></div>
+  `;
+
+  const listEl = document.getElementById('report-list');
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div class="empty-state"><div class="banana-character">🍌</div><p>この月のレポートはありません</p></div>';
+    return;
+  }
+
+  listEl.innerHTML = '<div class="report-list">' + filtered.map((r, i) => {
+    const isSent = r['フィードバック送信済み'] === 'TRUE' || r['フィードバック送信済み'] === true;
+    const badge = isSent
+      ? '<span class="badge-sent">Slack送信済み</span>'
+      : '<span class="badge-unsent">未送信</span>';
+    const followers = r['フォロワー(月末)'] || 0;
+    const sales = Number(r['売上金額']) || 0;
+    const date = r['提出日時'] ? new Date(r['提出日時']).toLocaleDateString('ja-JP') : '';
+    return `<div class="report-card" onclick="showDetail(${i}, '${filterEl.value || selected}')">
+      <div class="report-card-header">
+        <span class="report-card-name">${escapeHTML(r['名前'] || '名前なし')}${badge}</span>
+        <span class="report-card-meta">${date}</span>
+      </div>
+      <div class="report-card-stats">
+        📸 フォロワー ${Number(r['フォロワー(月初)'] || 0).toLocaleString()} → ${Number(followers).toLocaleString()}
+        &nbsp;|&nbsp; 💰 ¥${sales.toLocaleString()}
+      </div>
+    </div>`;
+  }).join('') + '</div>';
+}
+
+// =============================================
+// Detail View
+// =============================================
+function showDetail(index, month) {
+  const filtered = allReports.filter(r => r['対象月'] === month);
+  const r = filtered[index];
+  if (!r) return;
+
+  document.getElementById('view-list').style.display = 'none';
+  const detail = document.getElementById('view-detail');
+  detail.style.display = 'block';
+
+  const followerDiff = (Number(r['フォロワー(月末)']) || 0) - (Number(r['フォロワー(月初)']) || 0);
+  const diffText = followerDiff >= 0 ? `+${followerDiff}` : `${followerDiff}`;
+  const isSent = r['フィードバック送信済み'] === 'TRUE' || r['フィードバック送信済み'] === true;
+
+  detail.innerHTML = `
+    <button class="back-btn" onclick="renderList()">← 一覧に戻る</button>
+
+    <div class="detail-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:22px">🍌 ${escapeHTML(r['名前'] || '')}</h2>
+        <span style="color:var(--text-muted);font-size:14px">${escapeHTML(r['対象月'] || '')}</span>
+      </div>
+
+      <div class="detail-section">
+        <h3>📸 Instagram</h3>
+        <p>フィード: ${r['フィード投稿数'] || 0}投稿 / リール: ${r['リール投稿数'] || 0}投稿</p>
+        <p>フォロワー: ${Number(r['フォロワー(月初)'] || 0).toLocaleString()} → ${Number(r['フォロワー(月末)'] || 0).toLocaleString()}（${diffText}）</p>
+      </div>
+
+      <div class="detail-section">
+        <h3>📝 その他メディア</h3>
+        <div class="answer">${escapeHTML(r['その他メディア'] || '（未入力）')}</div>
+      </div>
+
+      <div class="detail-section">
+        <h3>💰 売上 / オファー</h3>
+        <p>売上: ¥${(Number(r['売上金額']) || 0).toLocaleString()} / オファー数: ${r['オファー数'] || 0}件</p>
+        <div class="answer">${escapeHTML(r['売上詳細'] || '（未入力）')}</div>
+      </div>
+
+      <div class="detail-section">
+        <h3>✨ ① うまくいった点は何か？</h3>
+        <div class="answer">${escapeHTML(r['Q1_うまくいった点'] || '（未入力）')}</div>
+      </div>
+      <div class="detail-section">
+        <h3>🔍 ② それはなぜ上手くいったのか？</h3>
+        <div class="answer">${escapeHTML(r['Q2_なぜうまくいったか'] || '（未入力）')}</div>
+      </div>
+      <div class="detail-section">
+        <h3>🔄 ③ 今後も続けたほうがよいことは？</h3>
+        <div class="answer">${escapeHTML(r['Q3_続けること'] || '（未入力）')}</div>
+      </div>
+      <div class="detail-section">
+        <h3>💡 ④ うまくいかなかった点は？</h3>
+        <div class="answer">${escapeHTML(r['Q4_うまくいかなかった点'] || '（未入力）')}</div>
+      </div>
+      <div class="detail-section">
+        <h3>🧐 ⑤ それはなぜうまくいかなかったのか？</h3>
+        <div class="answer">${escapeHTML(r['Q5_なぜうまくいかなかったか'] || '（未入力）')}</div>
+      </div>
+      <div class="detail-section">
+        <h3>🚫 ⑥ 今後やめたほうがよいことは？</h3>
+        <div class="answer">${escapeHTML(r['Q6_やめること'] || '（未入力）')}</div>
+      </div>
+      <div class="detail-section">
+        <h3>🚀 ⑦ 来月やることは何ですか？</h3>
+        <div class="answer">${escapeHTML(r['Q7_来月やること'] || '（未入力）')}</div>
+      </div>
+    </div>
+
+    <div class="ai-section">
+      <h3>🤖 AIフィードバック</h3>
+      <button class="btn-generate" id="btn-generate" onclick="generateFeedback()">
+        AIフィードバックを生成する
+      </button>
+      <textarea class="feedback-textarea" id="feedback-text" style="display:none;" placeholder="生成されたフィードバックがここに表示されます..."></textarea>
+      <div class="action-row" id="action-row" style="display:none;">
+        <button class="btn-copy" id="btn-copy" onclick="copyFeedback()">📋 コピー</button>
+        <label class="slack-check">
+          <input type="checkbox" id="slack-sent" ${isSent ? 'checked' : ''} onchange="updateSlackSent(${r._row}, this.checked)">
+          Slackに送信済み
+        </label>
+      </div>
+      <div class="status-msg" id="status-msg"></div>
+    </div>
+  `;
+
+  // Store current report data for AI generation
+  detail.dataset.report = JSON.stringify(r);
+}
+
+// =============================================
+// AI Feedback Generation
+// =============================================
+async function generateFeedback() {
+  if (!claudeApiKey) {
+    alert('Claude APIキーが設定されていません。ログアウトして再度ログインしてください。');
+    return;
+  }
+
+  const btn = document.getElementById('btn-generate');
+  const textarea = document.getElementById('feedback-text');
+  const actionRow = document.getElementById('action-row');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loading-spinner"></span>フィードバックを生成中...';
+
+  const r = JSON.parse(document.getElementById('view-detail').dataset.report);
+  const followerDiff = (Number(r['フォロワー(月末)']) || 0) - (Number(r['フォロワー(月初)']) || 0);
+
+  const prompt = `あなたはSNSマーケティングのコンサルタント講師です。
+以下の月報データを読んで、メンバーに対する具体的なフィードバックを日本語で書いてください。
+
+フィードバックは以下の構成で書いてください：
+1. 今月の成果への具体的な褒め（データを引用して）
+2. 特に良かった点の深掘り（なぜそれが重要か）
+3. 改善へのアドバイス（本人が挙げた課題に対して具体的に）
+4. 来月に向けた応援メッセージ
+
+トーンは温かく前向きに、でも具体的に。絵文字は控えめに使ってOKです。
+Slackに投稿するので、*太字* や箇条書きのマークダウン形式で書いてください。
+
+---
+【メンバー名】${r['名前'] || ''}
+【対象月】${r['対象月'] || ''}
+
+【Instagram実績】
+フィード投稿: ${r['フィード投稿数'] || 0}件 / リール投稿: ${r['リール投稿数'] || 0}件
+フォロワー: ${r['フォロワー(月初)'] || 0} → ${r['フォロワー(月末)'] || 0}（${followerDiff >= 0 ? '+' : ''}${followerDiff}）
+
+【その他メディア】
+${r['その他メディア'] || '特になし'}
+
+【売上】
+売上金額: ¥${(Number(r['売上金額']) || 0).toLocaleString()} / オファー数: ${r['オファー数'] || 0}件
+${r['売上詳細'] || ''}
+
+【7つのフィードバック（本人回答）】
+① うまくいった点: ${r['Q1_うまくいった点'] || ''}
+② なぜうまくいったか: ${r['Q2_なぜうまくいったか'] || ''}
+③ 続けること: ${r['Q3_続けること'] || ''}
+④ うまくいかなかった点: ${r['Q4_うまくいかなかった点'] || ''}
+⑤ なぜうまくいかなかったか: ${r['Q5_なぜうまくいかなかったか'] || ''}
+⑥ やめること: ${r['Q6_やめること'] || ''}
+⑦ 来月やること: ${r['Q7_来月やること'] || ''}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeApiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1024,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.content && data.content[0]) {
+      textarea.value = data.content[0].text;
+      textarea.style.display = 'block';
+      actionRow.style.display = 'flex';
+      btn.innerHTML = '🔄 再生成する';
+      btn.disabled = false;
+    } else {
+      const errMsg = data.error ? data.error.message : 'レスポンスが不正です';
+      showStatus('error', 'エラー: ' + errMsg);
+      btn.innerHTML = 'AIフィードバックを生成する';
+      btn.disabled = false;
+    }
+  } catch (err) {
+    showStatus('error', '通信エラー: ' + err.message);
+    btn.innerHTML = 'AIフィードバックを生成する';
+    btn.disabled = false;
+  }
+}
+
+// =============================================
+// Copy & Slack Status
+// =============================================
+function copyFeedback() {
+  const textarea = document.getElementById('feedback-text');
+  navigator.clipboard.writeText(textarea.value).then(() => {
+    const btn = document.getElementById('btn-copy');
+    btn.classList.add('copied');
+    btn.textContent = '✅ コピーしました！';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = '📋 コピー';
+    }, 2000);
+  });
+}
+
+async function updateSlackSent(row, checked) {
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'update_feedback_sent',
+        row: row,
+        value: checked
+      })
+    });
+
+    // Update local data
+    const report = allReports.find(r => r._row === row);
+    if (report) report['フィードバック送信済み'] = checked ? 'TRUE' : 'FALSE';
+
+    showStatus('success', checked ? 'Slack送信済みに更新しました' : '未送信に戻しました');
+  } catch (err) {
+    showStatus('error', '更新に失敗しました');
+  }
+}
+
+function showStatus(type, msg) {
+  const el = document.getElementById('status-msg');
+  el.className = 'status-msg ' + type;
+  el.textContent = msg;
+  setTimeout(() => { el.className = 'status-msg'; }, 3000);
+}
+
+function escapeHTML(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+</script>
+</body>
+</html>
