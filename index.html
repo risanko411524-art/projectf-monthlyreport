@@ -643,41 +643,164 @@ input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
 <div id="page-input" class="page active">
 <div class="container">
 
-  <!-- Name Screen -->
-  <div id="name-screen" class="step-card name-screen">
+  <!-- Header -->
+  <div class="step-card name-screen" style="margin-bottom: 24px;">
     <div class="banana-character big">🍌</div>
     <div class="subtitle-group">BANANA GROUP</div>
     <h1>Monthly Report</h1>
-    <p>おつかれさまです！今月の振り返りを始めましょう</p>
-    <div class="name-input-wrapper">
+    <p>おつかれさまです！今月の振り返りを入力しましょう</p>
+  </div>
+
+  <!-- Name & Month -->
+  <div class="step-card" style="margin-bottom: 16px;" id="section-name">
+    <div class="step-title">基本情報</div>
+    <div class="form-row" style="margin-top: 16px;">
       <div class="form-group">
-        <label class="form-label">お名前</label>
-        <input type="text" id="user-name" placeholder="名前を入力してください">
+        <label class="form-label">お名前 <span style="color:#E57373">*必須</span></label>
+        <input type="text" id="user-name" placeholder="名前を入力してください" required autofocus>
       </div>
       <div class="form-group">
         <label class="form-label">対象月</label>
         <input type="month" id="report-month">
       </div>
     </div>
-    <button class="btn btn-next" style="max-width:320px; margin:0 auto; display:block;" onclick="startReport()">スタート 🍌</button>
   </div>
 
-  <!-- Progress -->
-  <div id="progress-area" class="hidden">
-    <div class="progress-container">
-      <div class="progress-header">
-        <span class="progress-label"><span class="banana-character small">🍌</span> 進捗</span>
-        <span class="progress-step" id="progress-text">1 / 10</span>
+  <!-- Instagram -->
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon media">📸</div>
+    <div class="step-title">Instagram</div>
+    <div class="step-subtitle">今月のインスタの投稿数とフォロワー数を記録しましょう</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">フィード投稿数</label>
+        <input type="number" id="field-insta_feed" placeholder="0">
       </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill" style="width: 10%"></div>
+      <div class="form-group">
+        <label class="form-label">リール投稿数</label>
+        <input type="number" id="field-insta_reel" placeholder="0">
       </div>
     </div>
-    <div class="step-dots" id="step-dots"></div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">フォロワー数（月初）</label>
+        <input type="number" id="field-insta_followers_start" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">フォロワー数（月末）</label>
+        <input type="number" id="field-insta_followers_end" placeholder="0">
+      </div>
+    </div>
   </div>
 
-  <!-- Steps Container -->
-  <div id="steps-container"></div>
+  <!-- Other Media -->
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon media">📝</div>
+    <div class="step-title">その他メディア</div>
+    <div class="step-subtitle">note・X・YouTube・TikTokなど他のメディアの結果</div>
+    <div class="form-group">
+      <label class="form-label">投稿数・フォロワー増減など</label>
+      <textarea id="field-other_media_text" placeholder="例）&#10;note: 記事5投稿, フォロワー 2→5（+3）&#10;X: ツイート30投稿, フォロワー 50→80（+30）"></textarea>
+    </div>
+  </div>
+
+  <!-- Sales -->
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon sales">💰</div>
+    <div class="step-title">売上 / オファー結果</div>
+    <div class="step-subtitle">今月の売上やオファーの結果を記録しましょう</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">売上金額（円）</label>
+        <input type="number" id="field-sales_amount" placeholder="0">
+      </div>
+      <div class="form-group">
+        <label class="form-label">オファー数</label>
+        <input type="number" id="field-offers_count" placeholder="0">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">詳細（商品・モニターなど）</label>
+      <textarea id="field-sales_detail" placeholder="例）&#10;・オンラインコース 3件 × ¥30,000&#10;・モニター募集 5名オファー"></textarea>
+    </div>
+  </div>
+
+  <!-- 7 Feedback Questions -->
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">✨</div>
+    <div class="fb-question-num fb-q1">1</div>
+    <div class="step-title">① うまくいった点は何か？</div>
+    <div class="step-subtitle">できるだけたくさん挙げてみてください</div>
+    <div class="form-group">
+      <textarea id="field-fb_q1" placeholder="今月うまくいったこと..."></textarea>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">🔍</div>
+    <div class="fb-question-num fb-q2">2</div>
+    <div class="step-title">② それはなぜ上手くいったのか？</div>
+    <div class="step-subtitle">①で挙げたことの理由を考えてみましょう</div>
+    <div class="form-group">
+      <textarea id="field-fb_q2" placeholder="うまくいった理由..."></textarea>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">🔄</div>
+    <div class="fb-question-num fb-q3">3</div>
+    <div class="step-title">③ 今後も続けたほうがよいことは？</div>
+    <div class="step-subtitle">②を考慮して、続ける①は何でしょう</div>
+    <div class="form-group">
+      <textarea id="field-fb_q3" placeholder="続けていくこと..."></textarea>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">💡</div>
+    <div class="fb-question-num fb-q4">4</div>
+    <div class="step-title">④ うまくいかなかった点は？</div>
+    <div class="step-subtitle">前向きな気づき！改善ポイントを挙げましょう</div>
+    <div class="form-group">
+      <textarea id="field-fb_q4" placeholder="改善できること..."></textarea>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">🧐</div>
+    <div class="fb-question-num fb-q5">5</div>
+    <div class="step-title">⑤ それはなぜうまくいかなかったのか？</div>
+    <div class="step-subtitle">④で挙げたことの理由を考えてみましょう</div>
+    <div class="form-group">
+      <textarea id="field-fb_q5" placeholder="うまくいかなかった理由..."></textarea>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">🚫</div>
+    <div class="fb-question-num fb-q6">6</div>
+    <div class="step-title">⑥ 今後やめたほうがよいことは？</div>
+    <div class="step-subtitle">⑤を考慮して手放す④は何でしょう</div>
+    <div class="form-group">
+      <textarea id="field-fb_q6" placeholder="やめること..."></textarea>
+    </div>
+  </div>
+
+  <div class="step-card" style="margin-bottom: 16px;">
+    <div class="step-icon feedback">🚀</div>
+    <div class="fb-question-num fb-q7">7</div>
+    <div class="step-title">⑦ 来月やることは何ですか？</div>
+    <div class="step-subtitle">③と新たに取り組んだ方が良さそうなこと</div>
+    <div class="form-group">
+      <textarea id="field-fb_q7" placeholder="来月のアクション..."></textarea>
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <div style="text-align: center; margin-top: 8px;">
+    <button class="btn btn-submit" style="max-width: 400px; width: 100%; padding: 20px;" onclick="submitReport()">提出する 🍌</button>
+    <div id="name-error" class="hidden" style="color: #E57373; font-size: 14px; margin-top: 8px; font-weight: 600;">お名前を入力してください</div>
+  </div>
 
   <!-- Completion -->
   <div id="completion-screen" class="step-card completion-screen hidden"></div>
@@ -721,183 +844,31 @@ function saveReports(reports) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
 }
 
-// ========== STEP DEFINITIONS ==========
-const STEPS = [
-  {
-    id: 'instagram', icon: '📸', iconClass: 'media',
-    title: 'Instagram',
-    subtitle: '今月のインスタの投稿数とフォロワー数を記録しましょう',
-    fields: [
-      { key: 'insta_feed', label: 'フィード投稿数', type: 'number', placeholder: '0' },
-      { key: 'insta_reel', label: 'リール投稿数', type: 'number', placeholder: '0' },
-      { key: 'insta_followers_start', label: 'フォロワー数（月初）', type: 'number', placeholder: '0' },
-      { key: 'insta_followers_end', label: 'フォロワー数（月末）', type: 'number', placeholder: '0' },
-    ]
-  },
-  {
-    id: 'other_media', icon: '📝', iconClass: 'media',
-    title: 'その他メディア',
-    subtitle: 'note・X・YouTube・TikTokなど他のメディアの結果',
-    fields: [
-      { key: 'other_media_text', label: '投稿数・フォロワー増減など', type: 'textarea',
-        placeholder: '例）\nnote: 記事5投稿, フォロワー 2→5（+3）\nX: ツイート30投稿, フォロワー 50→80（+30）' },
-    ]
-  },
-  {
-    id: 'sales', icon: '💰', iconClass: 'sales',
-    title: '売上 / オファー結果',
-    subtitle: '今月の売上やオファーの結果を記録しましょう',
-    fields: [
-      { key: 'sales_amount', label: '売上金額（円）', type: 'number', placeholder: '0' },
-      { key: 'offers_count', label: 'オファー数', type: 'number', placeholder: '0' },
-      { key: 'sales_detail', label: '詳細（商品・モニターなど）', type: 'textarea',
-        placeholder: '例）\n・オンラインコース 3件 × ¥30,000\n・モニター募集 5名オファー' },
-    ]
-  },
-  { id: 'fb1', icon: '✨', iconClass: 'feedback', num: 1,
-    title: '① うまくいった点は何か？', subtitle: 'できるだけたくさん挙げてみてください',
-    fields: [{ key: 'fb_q1', label: '', type: 'textarea', placeholder: '今月うまくいったこと...' }]
-  },
-  { id: 'fb2', icon: '🔍', iconClass: 'feedback', num: 2,
-    title: '② それはなぜ上手くいったのか？', subtitle: '①で挙げたことの理由を考えてみましょう',
-    fields: [{ key: 'fb_q2', label: '', type: 'textarea', placeholder: 'うまくいった理由...' }]
-  },
-  { id: 'fb3', icon: '🔄', iconClass: 'feedback', num: 3,
-    title: '③ 今後も続けたほうがよいことは？', subtitle: '②を考慮して、続ける①は何でしょう',
-    fields: [{ key: 'fb_q3', label: '', type: 'textarea', placeholder: '続けていくこと...' }]
-  },
-  { id: 'fb4', icon: '💡', iconClass: 'feedback', num: 4,
-    title: '④ うまくいかなかった点は？', subtitle: '前向きな気づき！改善ポイントを挙げましょう',
-    fields: [{ key: 'fb_q4', label: '', type: 'textarea', placeholder: '改善できること...' }]
-  },
-  { id: 'fb5', icon: '🧐', iconClass: 'feedback', num: 5,
-    title: '⑤ それはなぜうまくいかなかったのか？', subtitle: '④で挙げたことの理由を考えてみましょう',
-    fields: [{ key: 'fb_q5', label: '', type: 'textarea', placeholder: 'うまくいかなかった理由...' }]
-  },
-  { id: 'fb6', icon: '🚫', iconClass: 'feedback', num: 6,
-    title: '⑥ 今後やめたほうがよいことは？', subtitle: '⑤を考慮して手放す④は何でしょう',
-    fields: [{ key: 'fb_q6', label: '', type: 'textarea', placeholder: 'やめること...' }]
-  },
-  { id: 'fb7', icon: '🚀', iconClass: 'feedback', num: 7,
-    title: '⑦ 来月やることは何ですか？', subtitle: '③と新たに取り組んだ方が良さそうなこと',
-    fields: [{ key: 'fb_q7', label: '', type: 'textarea', placeholder: '来月のアクション...' }]
-  },
+// ========== FIELD KEYS ==========
+const FIELD_KEYS = [
+  'insta_feed', 'insta_reel', 'insta_followers_start', 'insta_followers_end',
+  'other_media_text', 'sales_amount', 'offers_count', 'sales_detail',
+  'fb_q1', 'fb_q2', 'fb_q3', 'fb_q4', 'fb_q5', 'fb_q6', 'fb_q7'
 ];
-
-const TOTAL_STEPS = STEPS.length;
-let currentStep = 0;
-let formData = {};
 
 // ========== INIT ==========
 function init() {
   const now = new Date();
   document.getElementById('report-month').value =
     `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const dotsEl = document.getElementById('step-dots');
-  dotsEl.innerHTML = STEPS.map((_, i) =>
-    `<div class="step-dot" data-step="${i}" onclick="goToStep(${i})"></div>`
-  ).join('');
-  renderStep();
+  // Focus on name field
+  setTimeout(() => document.getElementById('user-name').focus(), 100);
 }
 
-function startReport() {
-  const name = document.getElementById('user-name').value.trim();
-  if (!name) {
-    document.getElementById('user-name').focus();
-    document.getElementById('user-name').style.borderColor = '#FF6B6B';
-    return;
-  }
-  formData.name = name;
-  formData.month = document.getElementById('report-month').value;
-  document.getElementById('name-screen').classList.add('hidden');
-  document.getElementById('progress-area').classList.remove('hidden');
-  renderStep();
-}
-
-function renderStep() {
-  if (currentStep >= TOTAL_STEPS) return;
-  const step = STEPS[currentStep];
-  const pct = ((currentStep + 1) / TOTAL_STEPS) * 100;
-  document.getElementById('progress-fill').style.width = pct + '%';
-  document.getElementById('progress-text').textContent = `${currentStep + 1} / ${TOTAL_STEPS}`;
-  document.querySelectorAll('.step-dot').forEach((dot, i) => {
-    dot.classList.toggle('active', i === currentStep);
-    dot.classList.toggle('completed', i < currentStep);
+function collectFormData() {
+  const data = {};
+  data.name = document.getElementById('user-name').value.trim();
+  data.month = document.getElementById('report-month').value;
+  FIELD_KEYS.forEach(key => {
+    const el = document.getElementById(`field-${key}`);
+    if (el) data[key] = el.value;
   });
-
-  let fieldsHTML = step.fields.map(f => {
-    const val = formData[f.key] || '';
-    if (f.type === 'textarea') {
-      return `<div class="form-group">
-        ${f.label ? `<label class="form-label">${f.label}</label>` : ''}
-        <textarea id="field-${f.key}" placeholder="${f.placeholder}">${val}</textarea>
-      </div>`;
-    } else {
-      return `<div class="form-group">
-        <label class="form-label">${f.label}</label>
-        <input type="${f.type}" id="field-${f.key}" value="${val}" placeholder="${f.placeholder}">
-      </div>`;
-    }
-  }).join('');
-
-  if (step.fields.every(f => f.type === 'number')) {
-    const pairs = [];
-    for (let i = 0; i < step.fields.length; i += 2) {
-      const f1 = step.fields[i], f2 = step.fields[i + 1];
-      let row = `<div class="form-row"><div class="form-group">
-        <label class="form-label">${f1.label}</label>
-        <input type="number" id="field-${f1.key}" value="${formData[f1.key] || ''}" placeholder="${f1.placeholder}">
-      </div>`;
-      if (f2) {
-        row += `<div class="form-group">
-          <label class="form-label">${f2.label}</label>
-          <input type="number" id="field-${f2.key}" value="${formData[f2.key] || ''}" placeholder="${f2.placeholder}">
-        </div>`;
-      }
-      row += `</div>`;
-      pairs.push(row);
-    }
-    fieldsHTML = pairs.join('');
-  }
-
-  const numClass = step.num ? `fb-q${step.num}` : '';
-  const html = `<div class="step-card" id="step-card">
-    <div class="step-icon ${step.iconClass}">${step.icon}</div>
-    ${step.num ? `<div class="fb-question-num ${numClass}">${step.num}</div>` : ''}
-    <div class="step-title">${step.title}</div>
-    <div class="step-subtitle">${step.subtitle}</div>
-    ${fieldsHTML}
-    <div class="btn-group">
-      ${currentStep > 0 ? '<button class="btn btn-back" onclick="prevStep()">戻る</button>' : ''}
-      <button class="btn ${currentStep === TOTAL_STEPS - 1 ? 'btn-submit' : 'btn-next'}" onclick="nextStep()">
-        ${currentStep === TOTAL_STEPS - 1 ? '提出する 🍌' : '次へ →'}
-      </button>
-    </div>
-  </div>`;
-
-  document.getElementById('steps-container').innerHTML = html;
-  const firstField = document.querySelector('#step-card input, #step-card textarea');
-  if (firstField) setTimeout(() => firstField.focus(), 300);
-}
-
-function saveCurrentFields() {
-  const step = STEPS[currentStep];
-  step.fields.forEach(f => {
-    const el = document.getElementById(`field-${f.key}`);
-    if (el) formData[f.key] = el.value;
-  });
-}
-function nextStep() {
-  saveCurrentFields();
-  if (currentStep < TOTAL_STEPS - 1) { currentStep++; renderStep(); }
-  else { submitReport(); }
-}
-function prevStep() {
-  saveCurrentFields();
-  if (currentStep > 0) { currentStep--; renderStep(); }
-}
-function goToStep(i) {
-  if (i >= 0 && i < TOTAL_STEPS) { saveCurrentFields(); currentStep = i; renderStep(); }
+  return data;
 }
 
 // ========== BUILD SLACK TEXT ==========
@@ -949,6 +920,19 @@ ${d.fb_q7 || ''}
 
 // ========== SUBMIT ==========
 function submitReport() {
+  const formData = collectFormData();
+
+  // Name validation
+  if (!formData.name) {
+    document.getElementById('name-error').classList.remove('hidden');
+    document.getElementById('user-name').style.borderColor = '#E57373';
+    document.getElementById('user-name').focus();
+    document.getElementById('section-name').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  document.getElementById('name-error').classList.add('hidden');
+  document.getElementById('user-name').style.borderColor = '';
+
   const slackText = buildSlackText(formData);
   const report = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
@@ -971,9 +955,11 @@ function submitReport() {
     sendToGAS(report);
   }
 
-  // Show completion with slack copy
-  document.getElementById('progress-area').classList.add('hidden');
-  document.getElementById('steps-container').innerHTML = '';
+  // Hide all form sections, show completion
+  const container = document.querySelector('#page-input .container');
+  Array.from(container.children).forEach(el => {
+    if (el.id !== 'completion-screen') el.classList.add('hidden');
+  });
   const comp = document.getElementById('completion-screen');
   comp.classList.remove('hidden');
   comp.innerHTML = `
@@ -1055,14 +1041,24 @@ function sendToGAS(report) {
 }
 
 function resetForm() {
-  currentStep = 0;
-  formData = {};
-  document.getElementById('name-screen').classList.remove('hidden');
+  // Show all form sections
+  const container = document.querySelector('#page-input .container');
+  Array.from(container.children).forEach(el => el.classList.remove('hidden'));
   document.getElementById('completion-screen').classList.add('hidden');
-  document.getElementById('progress-area').classList.add('hidden');
-  document.getElementById('steps-container').innerHTML = '';
+  // Clear all fields
   document.getElementById('user-name').value = '';
   document.getElementById('user-name').style.borderColor = '';
+  FIELD_KEYS.forEach(key => {
+    const el = document.getElementById(`field-${key}`);
+    if (el) el.value = '';
+  });
+  // Reset month to current
+  const now = new Date();
+  document.getElementById('report-month').value =
+    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  // Scroll to top and focus name
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  setTimeout(() => document.getElementById('user-name').focus(), 300);
 }
 
 // ========== PAGES ==========
