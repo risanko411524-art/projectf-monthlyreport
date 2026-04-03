@@ -1072,10 +1072,32 @@ function showPage(page) {
 }
 
 // ========== DASHBOARD ==========
-function renderDashboard() {
-  const reports = loadReports();
+async function renderDashboard() {
   const container = document.getElementById('dashboard-content');
   const filterEl = document.getElementById('dash-month-filter');
+
+  container.innerHTML = '<div class="stat-card" style="text-align:center;padding:40px"><p style="color:var(--text-muted)">データを読み込み中...</p></div>';
+
+  // GASからデータ取得
+  let reports = [];
+  try {
+    const res = await fetch(GAS_URL);
+    const json = await res.json();
+    if (json.status === 'ok') {
+      reports = json.data.map(r => {
+        // スプシが日付型に変換した「対象月」をYYYY-MM形式に戻す
+        let month = r['対象月'] || '';
+        if (String(month).includes('T')) {
+          const d = new Date(month);
+          month = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        }
+        return { name: r['名前'] || '', month };
+      });
+    }
+  } catch (err) {
+    container.innerHTML = '<div class="stat-card" style="text-align:center;padding:40px"><p style="color:var(--text-muted)">データの取得に失敗しました</p></div>';
+    return;
+  }
 
   // 月の選択肢を構築
   const months = [...new Set(reports.map(r => r.month).filter(Boolean))].sort().reverse();
@@ -1086,14 +1108,14 @@ function renderDashboard() {
     months.filter(m => m !== currentMonth).map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`).join('');
 
   // 選択月のレポートを抽出
-  const monthReports = reports.filter(r => r.month === selectedMonth);
+  const monthReports = reports.filter(r => r.month === (filterEl.value || selectedMonth));
   const submittedNames = [...new Set(monthReports.map(r => r.name).filter(Boolean))];
   const submittedCount = submittedNames.length;
 
   // メインカード: 提出人数
   let html = `<div class="stat-card" style="text-align:center;padding:40px 24px;">
     <div style="font-size:64px;margin-bottom:12px;">🍌</div>
-    <h3 style="font-size:16px;margin-bottom:16px;">${selectedMonth} の月報提出状況</h3>
+    <h3 style="font-size:16px;margin-bottom:16px;">${filterEl.value || selectedMonth} の月報提出状況</h3>
     <div class="stat-value" style="font-size:56px;margin-bottom:8px;">${submittedCount}<span style="font-size:24px;"> 人</span></div>
     <p style="color:var(--text-muted);font-size:15px;">が月報を提出しました！</p>
   </div>`;
@@ -1107,7 +1129,7 @@ function renderDashboard() {
           display:inline-flex;align-items:center;gap:6px;
           background:var(--bg2);padding:8px 16px;border-radius:100px;
           font-size:14px;font-weight:600;color:var(--text);
-        ">✅ ${name}</span>`).join('')}
+        ">✅ ${escapeHTML(name)}</span>`).join('')}
       </div>
     </div>`;
   } else {
