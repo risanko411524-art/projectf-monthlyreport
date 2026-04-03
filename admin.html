@@ -718,6 +718,13 @@ function showDetail(index, month) {
       <div class="status-msg" id="status-msg"></div>
     </div>
 
+    <div class="ai-section" style="border-color:rgba(102,187,106,0.3);">
+      <h3>📝 自分のフィードバック</h3>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">実際に送ったフィードバックを保存しておくと、AI生成の参考になります</p>
+      <textarea class="feedback-textarea" id="instructor-feedback" style="display:block;min-height:120px;" placeholder="Slackに送ったフィードバックを貼り付けて保存...">${escapeHTML(r['講師フィードバック'] || '')}</textarea>
+      <button class="btn-copy" id="btn-save-fb" onclick="saveInstructorFeedback(${r._row})" style="margin-top:12px;">💾 保存</button>
+    </div>
+
     <div class="ai-section">
       <h3>🤖 AIフィードバック</h3>
       <button class="btn-generate" id="btn-generate" onclick="generateFeedback()">
@@ -752,6 +759,17 @@ async function generateFeedback() {
 
   const r = JSON.parse(document.getElementById('view-detail').dataset.report);
   const followerDiff = (Number(r['フォロワー(月末)']) || 0) - (Number(r['フォロワー(月初)']) || 0);
+
+  // 過去の講師フィードバックを収集（最大3件）
+  const pastFeedbacks = allReports
+    .filter(rep => rep['講師フィードバック'] && String(rep['講師フィードバック']).trim())
+    .slice(0, 3)
+    .map(rep => `【${rep['名前']}さんへのフィードバック例】\n${rep['講師フィードバック']}`)
+    .join('\n\n');
+
+  const examplesSection = pastFeedbacks
+    ? `\n\n【参考：過去に講師が書いたフィードバック例】\n以下の例の口調・視点・文体を参考にして、同じようなトーンで書いてください。\n\n${pastFeedbacks}\n`
+    : '';
 
   const prompt = `あなたは女性向けの起業・SNSマーケティングのコンサルタント講師です。
 以下の月報データを読んで、メンバーに対するフィードバックを書いてください。
@@ -794,7 +812,7 @@ ${r['売上詳細'] || ''}
 ④ うまくいかなかった点: ${r['Q4_うまくいかなかった点'] || ''}
 ⑤ なぜうまくいかなかったか: ${r['Q5_なぜうまくいかなかったか'] || ''}
 ⑥ やめること: ${r['Q6_やめること'] || ''}
-⑦ 来月やること: ${r['Q7_来月やること'] || ''}`;
+⑦ 来月やること: ${r['Q7_来月やること'] || ''}${examplesSection}`;
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -869,6 +887,32 @@ async function updateSlackSent(row, checked) {
     showStatus('success', checked ? 'Slack送信済みに更新しました' : '未送信に戻しました');
   } catch (err) {
     showStatus('error', '更新に失敗しました');
+  }
+}
+
+async function saveInstructorFeedback(row) {
+  const text = document.getElementById('instructor-feedback').value;
+  const btn = document.getElementById('btn-save-fb');
+  try {
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'save_instructor_feedback',
+        row: row,
+        text: text
+      })
+    });
+
+    const report = allReports.find(r => r._row === row);
+    if (report) report['講師フィードバック'] = text;
+
+    btn.classList.add('copied');
+    btn.textContent = '✅ 保存しました！';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '💾 保存'; }, 2000);
+  } catch (err) {
+    showStatus('error', '保存に失敗しました');
   }
 }
 

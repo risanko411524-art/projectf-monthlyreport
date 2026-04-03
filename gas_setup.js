@@ -63,11 +63,24 @@ function doPost(e) {
       var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
       var colIndex = headers.indexOf('フィードバック送信済み') + 1;
       if (colIndex === 0) {
-        // 列が無ければ追加
         colIndex = sheet.getLastColumn() + 1;
         sheet.getRange(1, colIndex).setValue('フィードバック送信済み');
       }
       sheet.getRange(data.row, colIndex).setValue(data.value ? 'TRUE' : 'FALSE');
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    // 講師フィードバックの保存
+    if (data.action === 'save_instructor_feedback') {
+      var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+      var colIndex = headers.indexOf('講師フィードバック') + 1;
+      if (colIndex === 0) {
+        colIndex = sheet.getLastColumn() + 1;
+        sheet.getRange(1, colIndex).setValue('講師フィードバック');
+      }
+      sheet.getRange(data.row, colIndex).setValue(data.text || '');
       return ContentService
         .createTextOutput(JSON.stringify({ status: 'ok' }))
         .setMimeType(ContentService.MimeType.JSON);
@@ -84,8 +97,8 @@ function doPost(e) {
         'Q1_うまくいった点', 'Q2_なぜうまくいったか', 'Q3_続けること',
         'Q4_うまくいかなかった点', 'Q5_なぜうまくいかなかったか', 'Q6_やめること',
         'Q7_来月やること',
-        'Slack用まとめテキスト',
-        'フィードバック送信済み'
+        'フィードバック送信済み',
+        '講師フィードバック'
       ]);
     }
 
@@ -110,8 +123,8 @@ function doPost(e) {
       data.fb_q5 || '',
       data.fb_q6 || '',
       data.fb_q7 || '',
-      data.slackText || '',
-      'FALSE'
+      'FALSE',
+      ''
     ]);
 
     return ContentService
