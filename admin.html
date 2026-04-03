@@ -853,7 +853,8 @@ async function updateSlackSent(row, checked) {
   try {
     await fetch(GAS_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({
         action: 'update_feedback_sent',
         row: row,
