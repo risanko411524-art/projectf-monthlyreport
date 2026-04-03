@@ -1099,13 +1099,16 @@ async function renderDashboard() {
     return;
   }
 
-  // 月の選択肢を構築
+  // 月の選択肢を構築（データがある最新月をデフォルトに）
   const months = [...new Set(reports.map(r => r.month).filter(Boolean))].sort().reverse();
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const selectedMonth = filterEl.value || currentMonth;
-  filterEl.innerHTML = `<option value="${currentMonth}">今月 (${currentMonth})</option>` +
-    months.filter(m => m !== currentMonth).map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`).join('');
+  const defaultMonth = months.length ? months[0] : currentMonth;
+  const selectedMonth = filterEl.value || defaultMonth;
+  filterEl.innerHTML = months.map(m => {
+    const label = m === currentMonth ? `今月 (${m})` : m;
+    return `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${label}</option>`;
+  }).join('');
 
   // 選択月のレポートを抽出
   const monthReports = reports.filter(r => r.month === (filterEl.value || selectedMonth));
