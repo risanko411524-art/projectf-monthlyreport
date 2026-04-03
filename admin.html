@@ -710,6 +710,14 @@ function showDetail(index, month) {
       </div>
     </div>
 
+    <div class="stat-card" style="margin-bottom:16px;padding:20px;">
+      <label class="slack-check" style="width:100%;justify-content:center;">
+        <input type="checkbox" id="slack-sent" ${isSent ? 'checked' : ''} onchange="updateSlackSent(${r._row}, this.checked)">
+        Slackにフィードバック送信済み
+      </label>
+      <div class="status-msg" id="status-msg"></div>
+    </div>
+
     <div class="ai-section">
       <h3>🤖 AIフィードバック</h3>
       <button class="btn-generate" id="btn-generate" onclick="generateFeedback()">
@@ -718,12 +726,7 @@ function showDetail(index, month) {
       <textarea class="feedback-textarea" id="feedback-text" style="display:none;" placeholder="生成されたフィードバックがここに表示されます..."></textarea>
       <div class="action-row" id="action-row" style="display:none;">
         <button class="btn-copy" id="btn-copy" onclick="copyFeedback()">📋 コピー</button>
-        <label class="slack-check">
-          <input type="checkbox" id="slack-sent" ${isSent ? 'checked' : ''} onchange="updateSlackSent(${r._row}, this.checked)">
-          Slackに送信済み
-        </label>
       </div>
-      <div class="status-msg" id="status-msg"></div>
     </div>
   `;
 
